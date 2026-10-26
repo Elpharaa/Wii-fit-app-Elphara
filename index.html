@@ -221,6 +221,7 @@ nav.tabs button[aria-current="page"]{color:var(--sakura)}
 .mapbox .recenter{position:absolute;right:10px;bottom:24px;z-index:500;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 12px;font-weight:700;font-size:13px;box-shadow:var(--shadow)}
 .mapbox .maptag{position:absolute;left:10px;top:10px;z-index:500;background:var(--surface);border-radius:999px;padding:3px 10px;font-size:11px;font-weight:700;color:var(--ink-2);box-shadow:var(--shadow)}
 .leaflet-container{font-family:var(--f-body);background:#EEF1F3}
+.leaflet-tile-pane{filter:saturate(.45) brightness(1.05) contrast(.92)}
 .leaflet-control-attribution{font-size:9px!important;background:rgb(255 255 255/.75)!important}
 .li.tap{cursor:pointer}
 .li.tap:hover .t{color:var(--sakura)}
@@ -848,12 +849,12 @@ function simplify(a,max){if(a.length<=max)return a;const s=a.length/max,o=[];for
 function project(pts,W,H,padd){if(pts.length<2)return null;const lat0=pts[0][0]*RAD;let xs=pts.map(p=>p[1]*Math.cos(lat0)),ys=pts.map(p=>p[0]);
   const x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys);const sc=Math.min((W-2*padd)/Math.max(1e-9,x1-x0),(H-2*padd)/Math.max(1e-9,y1-y0));
   const ox=(W-(x1-x0)*sc)/2,oy=(H-(y1-y0)*sc)/2;return pts.map((p,i)=>[ox+(xs[i]-x0)*sc,H-(oy+(ys[i]-y0)*sc)])}
-const TILE='https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+const TILE='https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 let tilesOK=null;
 (function probe(){if(!window.L){tilesOK=false;return}const im=new Image();let done=false;
   const end=v=>{if(done)return;done=true;tilesOK=v;Object.keys(MB).forEach(k=>MB[k].redraw&&MB[k].redraw())};
   im.onload=()=>end(true);im.onerror=()=>end(false);setTimeout(()=>end(false),8000);
-  im.src='https://a.basemaps.cartocdn.com/light_all/0/0/0.png'})();
+  im.src='https://tile.openstreetmap.org/0/0/0.png'})();
 const MB={};
 function mapBox(id){if(MB[id])return MB[id];const box=$('#'+id);
   const o={box,cv:box.querySelector('canvas'),el:box.querySelector('.lmap'),rc:box.querySelector('.recenter'),tag:box.querySelector('.maptag'),m:null,follow:true,pts:[],opt:{}};
@@ -862,7 +863,7 @@ function mapBox(id){if(MB[id])return MB[id];const box=$('#'+id);
   MB[id]=o;return o}
 function ensureMap(o){if(o.m||!window.L)return o.m;
   try{o.m=L.map(o.el,{zoomControl:false,attributionControl:true});o.m.attributionControl.setPrefix(false);
-    L.tileLayer(TILE,{maxZoom:19,subdomains:'abcd',attribution:'© OpenStreetMap © CARTO'}).addTo(o.m);
+    L.tileLayer(TILE,{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(o.m);
     o.line=L.polyline([],{color:'#1FA2DE',weight:5,opacity:.9,lineJoin:'round'}).addTo(o.m);
     o.start=L.circleMarker([0,0],{radius:6,color:'#fff',weight:2,fillColor:'#7CBF2E',fillOpacity:1});
     o.dot=L.circleMarker([0,0],{radius:8,color:'#fff',weight:3,fillColor:'#1FA2DE',fillOpacity:1});
