@@ -26,6 +26,7 @@
 }
 
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;
   -webkit-tap-highlight-color:transparent;overflow-x:hidden}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
@@ -94,6 +95,8 @@ section.view{display:flex;flex-direction:column;gap:18px;padding-top:4px}
 .hanko{position:absolute;inset:3px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#6FC7EE,var(--hanko));color:#fff;
   display:grid;place-items:center;box-shadow:0 2px 4px rgb(31 162 222/.35)}
 .hanko svg{width:58%;height:58%}
+.hanko.reveil{background:radial-gradient(circle at 35% 30%,#FFD978,#F2A93B);box-shadow:0 2px 4px rgb(242 169 59/.35)}
+.hanko.soir{background:radial-gradient(circle at 35% 30%,#A6B1EC,#5B6CC4);box-shadow:0 2px 4px rgb(91 108 196/.35)}
 .hanko.run{background:radial-gradient(circle at 35% 30%,#B2E06A,var(--matcha));box-shadow:0 2px 4px rgb(124 191 46/.35)}
 .hanko i{position:absolute;right:-3px;top:-3px;font-style:normal;font-family:var(--f-mono);font-size:9px;background:var(--ink);color:#fff;border-radius:8px;padding:0 4px}
 .legend{display:flex;flex-wrap:wrap;gap:6px 12px;margin-top:10px;font-size:12px;color:var(--ink-2)}
@@ -211,9 +214,21 @@ nav.tabs button[aria-current="page"]{color:var(--sakura)}
 .danger.armed{background:var(--danger);color:#fff;border-color:var(--danger)}
 .runcount{position:fixed;inset:0;z-index:25;background:rgb(243 245 247/.94);display:grid;place-items:center;font-family:var(--f-display);font-weight:900;font-size:min(42vw,200px);color:var(--sakura)}
 .runcount.go-txt{font-size:min(22vw,110px);color:var(--matcha)}
+/* mini-carte */
+.mapbox{position:relative;border-radius:var(--r);overflow:hidden;background:var(--surface-2);border:1px solid var(--line);height:220px}
+.mapbox .lmap,.mapbox canvas{position:absolute;inset:0;width:100%;height:100%;border-radius:0;background:transparent}
+.mapbox .lmap{z-index:0}
+.mapbox .recenter{position:absolute;right:10px;bottom:24px;z-index:500;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 12px;font-weight:700;font-size:13px;box-shadow:var(--shadow)}
+.mapbox .maptag{position:absolute;left:10px;top:10px;z-index:500;background:var(--surface);border-radius:999px;padding:3px 10px;font-size:11px;font-weight:700;color:var(--ink-2);box-shadow:var(--shadow)}
+.leaflet-container{font-family:var(--f-body);background:#EEF1F3}
+.leaflet-control-attribution{font-size:9px!important;background:rgb(255 255 255/.75)!important}
+.li.tap{cursor:pointer}
+.li.tap:hover .t{color:var(--sakura)}
+.breath{display:inline-block;font-weight:800;color:var(--sakura);font-size:18px}
 .toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:40;
   background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-weight:700;font-size:14px;max-width:90vw;text-align:center}
 </style>
+<style>.leaflet-pane,.leaflet-tile,.leaflet-marker-icon,.leaflet-marker-shadow,.leaflet-tile-container,.leaflet-pane > svg,.leaflet-pane > canvas,.leaflet-zoom-box,.leaflet-image-layer,.leaflet-layer{position:absolute;left:0;top:0;}.leaflet-container{overflow:hidden;}.leaflet-tile,.leaflet-marker-icon,.leaflet-marker-shadow{-webkit-user-select:none;-moz-user-select:none;user-select:none;-webkit-user-drag:none;}.leaflet-tile::selection{background:transparent;}.leaflet-safari .leaflet-tile{image-rendering:-webkit-optimize-contrast;}.leaflet-safari .leaflet-tile-container{width:1600px;height:1600px;-webkit-transform-origin:0 0;}.leaflet-marker-icon,.leaflet-marker-shadow{display:block;}.leaflet-container .leaflet-overlay-pane svg{max-width:none !important;max-height:none !important;}.leaflet-container .leaflet-marker-pane img,.leaflet-container .leaflet-shadow-pane img,.leaflet-container .leaflet-tile-pane img,.leaflet-container img.leaflet-image-layer,.leaflet-container .leaflet-tile{max-width:none !important;max-height:none !important;width:auto;padding:0;}.leaflet-container img.leaflet-tile{mix-blend-mode:plus-lighter;}.leaflet-container.leaflet-touch-zoom{-ms-touch-action:pan-x pan-y;touch-action:pan-x pan-y;}.leaflet-container.leaflet-touch-drag{-ms-touch-action:pinch-zoom;touch-action:none;touch-action:pinch-zoom;}.leaflet-container.leaflet-touch-drag.leaflet-touch-zoom{-ms-touch-action:none;touch-action:none;}.leaflet-container{-webkit-tap-highlight-color:transparent;}.leaflet-container a{-webkit-tap-highlight-color:rgba(51,181,229,0.4);}.leaflet-tile{filter:inherit;visibility:hidden;}.leaflet-tile-loaded{visibility:inherit;}.leaflet-zoom-box{width:0;height:0;-moz-box-sizing:border-box;box-sizing:border-box;z-index:800;}.leaflet-overlay-pane svg{-moz-user-select:none;}.leaflet-pane{z-index:400;}.leaflet-tile-pane{z-index:200;}.leaflet-overlay-pane{z-index:400;}.leaflet-shadow-pane{z-index:500;}.leaflet-marker-pane{z-index:600;}.leaflet-tooltip-pane{z-index:650;}.leaflet-popup-pane{z-index:700;}.leaflet-map-pane canvas{z-index:100;}.leaflet-map-pane svg{z-index:200;}.leaflet-vml-shape{width:1px;height:1px;}.lvml{behavior:url(#default#VML);display:inline-block;position:absolute;}.leaflet-control{position:relative;z-index:800;pointer-events:visiblePainted;pointer-events:auto;}.leaflet-top,.leaflet-bottom{position:absolute;z-index:1000;pointer-events:none;}.leaflet-top{top:0;}.leaflet-right{right:0;}.leaflet-bottom{bottom:0;}.leaflet-left{left:0;}.leaflet-control{float:left;clear:both;}.leaflet-right .leaflet-control{float:right;}.leaflet-top .leaflet-control{margin-top:10px;}.leaflet-bottom .leaflet-control{margin-bottom:10px;}.leaflet-left .leaflet-control{margin-left:10px;}.leaflet-right .leaflet-control{margin-right:10px;}.leaflet-fade-anim .leaflet-popup{opacity:0;-webkit-transition:opacity 0.2s linear;-moz-transition:opacity 0.2s linear;transition:opacity 0.2s linear;}.leaflet-fade-anim .leaflet-map-pane .leaflet-popup{opacity:1;}.leaflet-zoom-animated{-webkit-transform-origin:0 0;-ms-transform-origin:0 0;transform-origin:0 0;}svg.leaflet-zoom-animated{will-change:transform;}.leaflet-zoom-anim .leaflet-zoom-animated{-webkit-transition:-webkit-transform 0.25s cubic-bezier(0,0,0.25,1);-moz-transition:-moz-transform 0.25s cubic-bezier(0,0,0.25,1);transition:transform 0.25s cubic-bezier(0,0,0.25,1);}.leaflet-zoom-anim .leaflet-tile,.leaflet-pan-anim .leaflet-tile{-webkit-transition:none;-moz-transition:none;transition:none;}.leaflet-zoom-anim .leaflet-zoom-hide{visibility:hidden;}.leaflet-interactive{cursor:pointer;}.leaflet-grab{cursor:-webkit-grab;cursor:-moz-grab;cursor:grab;}.leaflet-crosshair,.leaflet-crosshair .leaflet-interactive{cursor:crosshair;}.leaflet-popup-pane,.leaflet-control{cursor:auto;}.leaflet-dragging .leaflet-grab,.leaflet-dragging .leaflet-grab .leaflet-interactive,.leaflet-dragging .leaflet-marker-draggable{cursor:move;cursor:-webkit-grabbing;cursor:-moz-grabbing;cursor:grabbing;}.leaflet-marker-icon,.leaflet-marker-shadow,.leaflet-image-layer,.leaflet-pane > svg path,.leaflet-tile-container{pointer-events:none;}.leaflet-marker-icon.leaflet-interactive,.leaflet-image-layer.leaflet-interactive,.leaflet-pane > svg path.leaflet-interactive,svg.leaflet-image-layer.leaflet-interactive path{pointer-events:visiblePainted;pointer-events:auto;}.leaflet-container{background:#ddd;outline-offset:1px;}.leaflet-container a{color:#0078A8;}.leaflet-zoom-box{border:2px dotted #38f;background:rgba(255,255,255,0.5);}.leaflet-container{font-family:"Helvetica Neue",Arial,Helvetica,sans-serif;font-size:12px;font-size:0.75rem;line-height:1.5;}.leaflet-bar{box-shadow:0 1px 5px rgba(0,0,0,0.65);border-radius:4px;}.leaflet-bar a{background-color:#fff;border-bottom:1px solid #ccc;width:26px;height:26px;line-height:26px;display:block;text-align:center;text-decoration:none;color:black;}.leaflet-bar a,.leaflet-control-layers-toggle{background-position:50% 50%;background-repeat:no-repeat;display:block;}.leaflet-bar a:hover,.leaflet-bar a:focus{background-color:#f4f4f4;}.leaflet-bar a:first-child{border-top-left-radius:4px;border-top-right-radius:4px;}.leaflet-bar a:last-child{border-bottom-left-radius:4px;border-bottom-right-radius:4px;border-bottom:none;}.leaflet-bar a.leaflet-disabled{cursor:default;background-color:#f4f4f4;color:#bbb;}.leaflet-touch .leaflet-bar a{width:30px;height:30px;line-height:30px;}.leaflet-touch .leaflet-bar a:first-child{border-top-left-radius:2px;border-top-right-radius:2px;}.leaflet-touch .leaflet-bar a:last-child{border-bottom-left-radius:2px;border-bottom-right-radius:2px;}.leaflet-control-zoom-in,.leaflet-control-zoom-out{font:bold 18px 'Lucida Console',Monaco,monospace;text-indent:1px;}.leaflet-touch .leaflet-control-zoom-in,.leaflet-touch .leaflet-control-zoom-out{font-size:22px;}.leaflet-control-layers{box-shadow:0 1px 5px rgba(0,0,0,0.4);background:#fff;border-radius:5px;}.leaflet-control-layers-toggle{background-image:url(images/layers.png);width:36px;height:36px;}.leaflet-retina .leaflet-control-layers-toggle{background-image:url(images/layers-2x.png);background-size:26px 26px;}.leaflet-touch .leaflet-control-layers-toggle{width:44px;height:44px;}.leaflet-control-layers .leaflet-control-layers-list,.leaflet-control-layers-expanded .leaflet-control-layers-toggle{display:none;}.leaflet-control-layers-expanded .leaflet-control-layers-list{display:block;position:relative;}.leaflet-control-layers-expanded{padding:6px 10px 6px 6px;color:#333;background:#fff;}.leaflet-control-layers-scrollbar{overflow-y:scroll;overflow-x:hidden;padding-right:5px;}.leaflet-control-layers-selector{margin-top:2px;position:relative;top:1px;}.leaflet-control-layers label{display:block;font-size:13px;font-size:1.08333em;}.leaflet-control-layers-separator{height:0;border-top:1px solid #ddd;margin:5px -10px 5px -6px;}.leaflet-default-icon-path{background-image:url(images/marker-icon.png);}.leaflet-container .leaflet-control-attribution{background:#fff;background:rgba(255,255,255,0.8);margin:0;}.leaflet-control-attribution,.leaflet-control-scale-line{padding:0 5px;color:#333;line-height:1.4;}.leaflet-control-attribution a{text-decoration:none;}.leaflet-control-attribution a:hover,.leaflet-control-attribution a:focus{text-decoration:underline;}.leaflet-attribution-flag{display:inline !important;vertical-align:baseline !important;width:1em;height:0.6669em;}.leaflet-left .leaflet-control-scale{margin-left:5px;}.leaflet-bottom .leaflet-control-scale{margin-bottom:5px;}.leaflet-control-scale-line{border:2px solid #777;border-top:none;line-height:1.1;padding:2px 5px 1px;white-space:nowrap;-moz-box-sizing:border-box;box-sizing:border-box;background:rgba(255,255,255,0.8);text-shadow:1px 1px #fff;}.leaflet-control-scale-line:not(:first-child){border-top:2px solid #777;border-bottom:none;margin-top:-2px;}.leaflet-control-scale-line:not(:first-child):not(:last-child){border-bottom:2px solid #777;}.leaflet-touch .leaflet-control-attribution,.leaflet-touch .leaflet-control-layers,.leaflet-touch .leaflet-bar{box-shadow:none;}.leaflet-touch .leaflet-control-layers,.leaflet-touch .leaflet-bar{border:2px solid rgba(0,0,0,0.2);background-clip:padding-box;}.leaflet-popup{position:absolute;text-align:center;margin-bottom:20px;}.leaflet-popup-content-wrapper{padding:1px;text-align:left;border-radius:12px;}.leaflet-popup-content{margin:13px 24px 13px 20px;line-height:1.3;font-size:13px;font-size:1.08333em;min-height:1px;}.leaflet-popup-content p{margin:17px 0;margin:1.3em 0;}.leaflet-popup-tip-container{width:40px;height:20px;position:absolute;left:50%;margin-top:-1px;margin-left:-20px;overflow:hidden;pointer-events:none;}.leaflet-popup-tip{width:17px;height:17px;padding:1px;margin:-10px auto 0;pointer-events:auto;-webkit-transform:rotate(45deg);-moz-transform:rotate(45deg);-ms-transform:rotate(45deg);transform:rotate(45deg);}.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:white;color:#333;box-shadow:0 3px 14px rgba(0,0,0,0.4);}.leaflet-container a.leaflet-popup-close-button{position:absolute;top:0;right:0;border:none;text-align:center;width:24px;height:24px;font:16px/24px Tahoma,Verdana,sans-serif;color:#757575;text-decoration:none;background:transparent;}.leaflet-container a.leaflet-popup-close-button:hover,.leaflet-container a.leaflet-popup-close-button:focus{color:#585858;}.leaflet-popup-scrolled{overflow:auto;}.leaflet-oldie .leaflet-popup-content-wrapper{-ms-zoom:1;}.leaflet-oldie .leaflet-popup-tip{width:24px;margin:0 auto;-ms-filter:"progid:DXImageTransform.Microsoft.Matrix(M11=0.70710678,M12=0.70710678,M21=-0.70710678,M22=0.70710678)";filter:progid:DXImageTransform.Microsoft.Matrix(M11=0.70710678,M12=0.70710678,M21=-0.70710678,M22=0.70710678);}.leaflet-oldie .leaflet-control-zoom,.leaflet-oldie .leaflet-control-layers,.leaflet-oldie .leaflet-popup-content-wrapper,.leaflet-oldie .leaflet-popup-tip{border:1px solid #999;}.leaflet-div-icon{background:#fff;border:1px solid #666;}.leaflet-tooltip{position:absolute;padding:6px;background-color:#fff;border:1px solid #fff;border-radius:3px;color:#222;white-space:nowrap;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;pointer-events:none;box-shadow:0 1px 3px rgba(0,0,0,0.4);}.leaflet-tooltip.leaflet-interactive{cursor:pointer;pointer-events:auto;}.leaflet-tooltip-top:before,.leaflet-tooltip-bottom:before,.leaflet-tooltip-left:before,.leaflet-tooltip-right:before{position:absolute;pointer-events:none;border:6px solid transparent;background:transparent;content:"";}.leaflet-tooltip-bottom{margin-top:6px;}.leaflet-tooltip-top{margin-top:-6px;}.leaflet-tooltip-bottom:before,.leaflet-tooltip-top:before{left:50%;margin-left:-6px;}.leaflet-tooltip-top:before{bottom:0;margin-bottom:-12px;border-top-color:#fff;}.leaflet-tooltip-bottom:before{top:0;margin-top:-12px;margin-left:-6px;border-bottom-color:#fff;}.leaflet-tooltip-left{margin-left:-6px;}.leaflet-tooltip-right{margin-left:6px;}.leaflet-tooltip-left:before,.leaflet-tooltip-right:before{top:50%;margin-top:-6px;}.leaflet-tooltip-left:before{right:0;margin-right:-12px;border-left-color:#fff;}.leaflet-tooltip-right:before{left:0;margin-left:-12px;border-right-color:#fff;}@media print{.leaflet-control{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}</style>
 
 
 <div class="app">
@@ -231,7 +246,7 @@ nav.tabs button[aria-current="page"]{color:var(--sakura)}
         <div class="bubble" id="homeBubble"><div class="who" id="homeWho">Hana</div><p id="homePhrase">…</p><button class="link" id="sayPhrase">Écouter</button></div>
       </div>
       <div class="quick">
-        <button class="qbtn a" id="qYoga"><span class="k" data-ic="yoga"></span><strong>Yoga du matin</strong><small>Réveil sakura · 6 min</small></button>
+        <button class="qbtn a" id="qYoga"><span class="k" data-ic="yoga"></span><strong id="qYogaT">Yoga du matin</strong><small id="qYogaS">Éveil du matin · 6 min</small></button>
         <button class="qbtn b" id="qRun"><span class="k" data-ic="run"></span><strong>Aller courir</strong><small>Chrono et GPS</small></button>
       </div>
       <div>
@@ -242,7 +257,7 @@ nav.tabs button[aria-current="page"]{color:var(--sakura)}
         <div class="cal-head"><h3 id="calTitle">Octobre</h3>
           <div class="cal-nav"><button id="calPrev" aria-label="Mois précédent">‹</button><button id="calNext" aria-label="Mois suivant">›</button></div></div>
         <div class="cal" id="cal"></div>
-        <div class="legend"><span data-ic="run">course</span><span data-ic="yoga">yoga</span><span data-ic="renfo">renfo</span><span data-ic="cardio">cardio</span><span data-ic="etir">étirements</span></div>
+        <div class="legend"><span data-ic="run">course</span><span data-ic="yoga">yoga</span><span data-ic="renfo">renfo</span><span data-ic="cardio">cardio</span><span data-ic="etir">étirements</span><span data-ic="reveil">réveil</span><span data-ic="soir">soir</span></div>
       </div>
     </section>
 
@@ -285,7 +300,7 @@ nav.tabs button[aria-current="page"]{color:var(--sakura)}
           <div class="tile"><div class="v" id="rPace">–:––</div><div class="l">Allure /km</div></div>
         </div>
         <div id="goalLive" hidden><div class="row" style="justify-content:space-between;margin-bottom:6px;font-size:13px;color:var(--ink-2)"><span id="goalLbl">Objectif</span><span id="goalPct" class="num">0 %</span></div><div class="goalbar"><i id="goalBar"></i></div></div>
-        <canvas class="trace" id="traceLive" aria-label="Tracé du parcours"></canvas>
+        <div class="mapbox" id="mapLive"><div class="lmap"></div><canvas aria-label="Tracé du parcours"></canvas><span class="maptag" hidden>Carte</span><button class="recenter" hidden>Recentrer</button></div>
         <div class="controls"><button class="go ghost" id="runPause">Pause</button><button class="go dark" id="runStop">Terminer</button></div>
       </div>
 
@@ -294,13 +309,13 @@ nav.tabs button[aria-current="page"]{color:var(--sakura)}
           <div class="label">Bilan</div>
           <div class="run-stats" id="doneStats"></div>
           <div class="field" id="manualDistF" hidden><label for="manualDist">Distance parcourue (km)</label><input class="input" id="manualDist" type="number" inputmode="decimal" min="0" step="0.01" placeholder="ex. 4,2"></div>
-          <canvas class="trace" id="traceDone" style="height:160px"></canvas>
+          <div class="mapbox" id="mapDone"><div class="lmap"></div><canvas aria-label="Tracé du parcours"></canvas><span class="maptag" hidden>Carte</span><button class="recenter" hidden>Recentrer</button></div>
         </div>
         <div class="controls"><button class="go ghost" id="runDiscard">Ne pas garder</button><button class="go" id="runSave">Enregistrer</button></div>
       </div>
 
       <div class="card">
-        <div class="label" style="margin-bottom:6px">Dernières courses</div>
+        <div class="label" style="margin-bottom:6px">Dernières courses <span style="text-transform:none;letter-spacing:0;font-weight:500">· touche une course pour voir sa carte</span></div>
         <div class="list" id="runList"></div>
       </div>
     </section>
@@ -342,7 +357,7 @@ nav.tabs button[aria-current="page"]{color:var(--sakura)}
       <div class="count" id="pCount" hidden>3</div>
     </div>
     <div id="pReady" class="ready" hidden>
-      <h2 id="rdTitle">Réveil sakura</h2>
+      <h2 id="rdTitle">Séance</h2>
       <ol id="rdList"></ol>
       <button class="go" id="pGo" style="padding:16px 40px;font-size:19px">Commencer</button>
     </div>
@@ -376,8 +391,16 @@ nav.tabs button[aria-current="page"]{color:var(--sakura)}
 </div>
 
 <div class="runcount" id="runCount" hidden>3</div>
+<div class="sheet-bg" id="routeSheet" hidden>
+  <div class="sheet" role="dialog" aria-label="Détail de la course">
+    <div class="row" style="align-items:center"><div style="min-width:0"><div class="label" id="rsDate">Course</div><h2 style="font-size:22px" id="rsTitle">Course</h2></div><button class="iconbtn" id="rsClose" style="flex:none">Fermer</button></div>
+    <div class="run-stats" id="rsStats"></div>
+    <div class="mapbox" id="mapSheet" style="height:300px"><div class="lmap"></div><canvas aria-label="Tracé du parcours"></canvas><span class="maptag" hidden>Carte</span><button class="recenter" hidden>Recentrer</button></div>
+  </div>
+</div>
 <div class="toast" id="toast" hidden></div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script>
 (function(){
 "use strict";
@@ -400,7 +423,7 @@ function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 function seed(){
   const now=Date.now(),day=864e5;
   const runs=[[13,4200,1560],[10,5100,1860],[6,3000,1050],[2,6000,2190]].map(([d,m,t])=>({id:uid(),date:new Date(now-d*day).toISOString(),dist:m,time:t,pts:fakeTrace(m),demo:true}));
-  const sess=[[12,'yoga','Réveil sakura',380],[9,'renfo','Base solide',430],[8,'yoga','Lune calme',300],[5,'cardio','Express 7 min',450],[3,'etir','Après la course',300],[1,'yoga','Réveil sakura',380]].map(([d,c,n,s])=>({id:uid(),date:new Date(now-d*day).toISOString(),cat:c,name:n,sec:s,demo:true}));
+  const sess=[[12,'yoga','Éveil du matin',380],[9,'renfo','Base solide',430],[8,'yoga','Lune calme',300],[5,'cardio','Express 7 min',450],[3,'etir','Après la course',300],[1,'soir','Avant de dormir',465]].map(([d,c,n,s])=>({id:uid(),date:new Date(now-d*day).toISOString(),cat:c,name:n,sec:s,demo:true}));
   const w=[[20,70.4],[13,70.1],[6,69.6],[1,69.4]].map(([d,kg])=>({id:uid(),date:dkey(now-d*day),kg,demo:true}));
   return {coach:'hana',voice:true,runs,sessions:sess,weights:w};
 }
@@ -421,7 +444,7 @@ const COACH={
     today:["Tu as déjà bougé aujourd'hui. Bravo, profite de ta journée !","Séance faite pour aujourd'hui. Pense à bien t'hydrater."],
     first:"Bienvenue ! Je suis Hana. Choisis une séance, ou pars courir.",
     enc:["Très bien, continue.","Garde ton souffle régulier.","C'est joli, reste concentré.","Détends les épaules."],
-    five:"Encore cinq secondes.",rest:"Repos. Respire.",end:"Séance terminée. Tu peux être fier de toi !",go:"C'est parti, à ton rythme."},
+    five:"Encore cinq secondes.",rest:"Repos. Respire.",end:"Séance terminée. Tu peux être fier de toi !",night:"Séance terminée. Dors bien, et à demain.",morning:"Te voilà bien réveillé. Belle journée !",inhale:"Inspire",exhale:"Expire",go:"C'est parti, à ton rythme."},
   kenta:{name:'Kenta',k:'K',cls:'kenta',pitch:.8,rate:1.05,prefer:/thomas|paul|henri|nicolas|daniel|claude|mathieu|jacques|male|homme/i,
     hello:["Salut ! Prêt à transpirer un peu aujourd'hui ?","Pas d'excuses, juste dix minutes. On s'y met ?","Allez, on se bouge ! Tu vas te sentir au top après."],
     streak:n=>`${n} jours de suite ! T'es une machine, on garde la cadence !`,
@@ -429,7 +452,7 @@ const COACH={
     today:["Déjà entraîné aujourd'hui, respect ! Demain on remet ça.","Mission du jour accomplie. Récupère bien !"],
     first:"Salut, moi c'est Kenta ! Choisis une séance ou chausse tes baskets, on commence quand tu veux.",
     enc:["Allez, on lâche rien !","Super rythme !","Encore un effort !","C'est ça, continue !"],
-    five:"Plus que cinq secondes, à fond !",rest:"Pause. Récupère bien.",end:"Bien joué ! Séance terminée, t'as tout donné !",go:"Allez, c'est parti !"}
+    five:"Plus que cinq secondes, à fond !",rest:"Pause. Récupère bien.",end:"Bien joué ! Séance terminée, t'as tout donné !",night:"Bien joué. Maintenant, au lit. Bonne nuit !",morning:"Réveil terminé ! Allez, on attaque la journée !",inhale:"Inspire",exhale:"Expire",go:"Allez, c'est parti !"}
 };
 const C=()=>COACH[S.coach]||COACH.hana;
 let voices=[];
@@ -442,8 +465,9 @@ function say(text,force){
     if(v)u.voice=v;u.pitch=c.pitch;u.rate=c.rate;speechSynthesis.speak(u)}catch(e){}
 }
 let actx;
-function beep(f=880,d=.12){try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();const o=actx.createOscillator(),g=actx.createGain();
-  o.frequency.value=f;o.type='sine';g.gain.setValueAtTime(.18,actx.currentTime);g.gain.exponentialRampToValueAtTime(.001,actx.currentTime+d);
+let soft=false;
+function beep(f=880,d=.12){if(soft)f*=.6;try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();const o=actx.createOscillator(),g=actx.createGain();
+  o.frequency.value=f;o.type='sine';g.gain.setValueAtTime(soft?.06:.18,actx.currentTime);g.gain.exponentialRampToValueAtTime(.001,actx.currentTime+d);
   o.connect(g).connect(actx.destination);o.start();o.stop(actx.currentTime+d)}catch(e){}}
 const pick=a=>a[Math.floor(Math.random()*a.length)];
 let wake=null;
@@ -459,6 +483,21 @@ const POSE={
   warrior:P({hy:.83,tr:80,sr:0,tl:-55,sl:-55,uar:90,far:90,ual:-90,fal:-90}),
   dog:P({hy:1.256,t:50,n:40,ual:55,fal:55,uar:56,far:56,tl:-30,sl:-30,tr:-30,sr:-30}),
   cobra:P({hy:.17,t:120,n:150,tl:-90,sl:-90,tr:-92,sr:-92,ual:-60,fal:35,uar:-58,far:35}),
+  chair:P({hy:.914,tl:70,sl:-20,tr:72,sr:-18,t:155,n:165,ual:152,fal:152,uar:156,far:156}),
+  warrior1:P({hy:.7,tr:90,sr:0,tl:-30,sl:-84,ual:176,fal:178,uar:180,far:182}),
+  triangle:P({hy:1.256,tl:-30,sl:-30,tr:30,sr:30,t:118,n:110,ual:180,fal:180,uar:2,far:2}),
+  boat:P({hy:.12,t:-150,n:-160,tl:125,sl:125,tr:127,sr:127,ual:92,fal:92,uar:94,far:94}),
+  seatfold:P({hy:.1,t:118,n:108,tl:90,sl:90,tr:91,sr:91,ual:97,fal:94,uar:99,far:96}),
+  seated:P({hy:.12,t:180,n:180,tl:80,sl:-95,tr:84,sr:-92,ual:15,fal:75,uar:18,far:78}),
+  sphinx:P({hy:.1,t:115,n:150,tl:-90,sl:-90,tr:-92,sr:-92,ual:40,fal:90,uar:42,far:92}),
+  corpse:P({hy:.1,t:-90,n:-90,tl:90,sl:90,tr:92,sr:92,ual:96,fal:92,uar:98,far:94}),
+  legsup:P({hy:.1,t:-90,n:-90,tl:178,sl:180,tr:180,sr:182,ual:100,fal:92,uar:102,far:94}),
+  hugA:P({hy:.1,t:-90,n:-100,tl:-150,sl:110,tr:-148,sr:112,ual:132,fal:150,uar:134,far:152}),
+  hugB:P({hy:.1,t:-90,n:-95,tl:-135,sl:125,tr:-133,sr:127,ual:135,fal:155,uar:137,far:157}),
+  sideA:P({tl:-8,sl:-8,tr:8,sr:8,hy:1.436,t:198,n:205,ual:225,fal:245,uar:198,far:220}),
+  sideB:P({tl:-8,sl:-8,tr:8,sr:8,hy:1.436,t:162,n:155,ual:162,fal:140,uar:135,far:115}),
+  twistA:P({hy:.12,t:180,n:200,tl:-80,sl:85,tr:80,sr:-85,ual:40,fal:95,uar:-130,far:-165}),
+  twistB:P({hy:.12,t:180,n:160,tl:-80,sl:85,tr:80,sr:-85,ual:130,fal:165,uar:-40,far:-95}),
   child:P({hy:.36,t:85,n:80,tl:66,sl:-90,tr:64,sr:-90,ual:85,fal:90,uar:87,far:92}),
   catA:P({hy:.8,t:106,n:25,tl:0,sl:-90,tr:2,sr:-88,ual:0,fal:0,uar:2,far:-2}),
   catB:P({hy:.76,t:112,n:150,tl:0,sl:-90,tr:2,sr:-88,ual:0,fal:0,uar:2,far:-2}),
@@ -527,6 +566,19 @@ const EX={
   chien:{name:'Chien tête en bas',mode:'hold',f:['dog'],say:'Chien tête en bas. Mains et pieds au sol, pousse les hanches vers le haut pour former un V inversé.',cue:'Laisse la tête pendre entre les bras.'},
   cobra:{name:'Cobra',mode:'hold',f:['cobra'],say:'Cobra. Allongé sur le ventre, pousse sur les mains et ouvre la poitrine vers l\'avant.',cue:'Garde les épaules loin des oreilles.'},
   enfant:{name:"Posture de l'enfant",mode:'hold',f:['child'],say:"Posture de l'enfant. Assieds-toi sur les talons, allonge le buste vers l'avant, bras devant toi.",cue:'Relâche tout le dos à chaque expiration.'},
+  chaise:{name:'Chaise',mode:'hold',f:['chair'],say:'Chaise. Plie les genoux comme pour t\'asseoir sur une chaise invisible, bras tendus vers le ciel.',cue:'Garde le poids dans les talons.'},
+  guerrier1:{name:'Guerrier I',mode:'hold',f:['warrior1'],say:'Guerrier un. Grand pas en avant, genou avant plié, bras tendus vers le ciel, regard droit devant.',cue:'Pousse dans le pied arrière.'},
+  triangle:{name:'Triangle',mode:'hold',front:true,f:['triangle'],say:'Triangle. Jambes écartées, penche le buste sur le côté, une main vers la jambe, l\'autre vers le ciel.',cue:'Ouvre bien la poitrine vers le ciel.'},
+  bateau:{name:'Bateau',mode:'hold',f:['boat'],say:'Bateau. Assis, penche-toi un peu en arrière et lève les jambes, bras tendus devant toi.',cue:'Garde le dos bien droit. Plie les genoux si besoin.'},
+  pince:{name:'Pince assise',mode:'hold',f:['seatfold'],say:'Pince assise. Jambes tendues devant toi, penche le buste vers l\'avant et attrape tes tibias ou tes pieds.',cue:'Allonge le dos à chaque inspiration.'},
+  sphinx:{name:'Sphinx',mode:'hold',f:['sphinx'],say:'Sphinx. Allongé sur le ventre, appuie-toi sur les avant-bras et ouvre doucement la poitrine.',cue:'Relâche les fessiers et respire calmement.'},
+  pontYoga:{name:'Pont',mode:'hold',f:['bridgeB'],say:'Pont. Sur le dos, pieds au sol, monte doucement les hanches et tiens la position.',cue:'Respire dans la poitrine.'},
+  lateral:{name:'Étirement latéral',mode:'reps',per:6,front:true,f:['sideA','sideB'],say:'Étirement latéral. Bras au-dessus de la tête, penche-toi doucement d\'un côté puis de l\'autre.',cue:'Sens tout le flanc qui s\'étire.'},
+  torsion:{name:'Torsion assise',mode:'reps',per:7,front:true,f:['twistA','twistB'],say:'Torsion assise. Assis en tailleur, tourne doucement le buste d\'un côté puis de l\'autre.',cue:'Grandis-toi avant chaque rotation.'},
+  genouxPoitrine:{name:'Genoux à la poitrine',mode:'reps',per:5,f:['hugA','hugB'],say:'Genoux à la poitrine. Allongé sur le dos, serre tes genoux contre toi et berce-toi doucement.',cue:'Masse le bas du dos en douceur.'},
+  assis:{name:'Respiration assise',mode:'hold',breath:true,f:['seated'],say:'Respiration. Assis en tailleur, dos droit, mains sur les cuisses. Ferme les yeux.'},
+  jambesMur:{name:'Jambes au mur',mode:'hold',breath:true,f:['legsup'],say:'Jambes au mur. Allongé sur le dos, lève les jambes à la verticale, contre un mur si tu veux.'},
+  cadavre:{name:'Relaxation finale',mode:'hold',breath:true,f:['corpse'],say:'Relaxation. Allonge-toi sur le dos, bras le long du corps, paumes vers le ciel. Relâche tout.'},
   chatvache:{name:'Chat-vache',mode:'reps',per:6,f:['catA','catB'],say:'Chat vache. À quatre pattes. Arrondis le dos en expirant, puis creuse-le en inspirant.',cue:'Suis le rythme de ta respiration.'},
   flexion:{name:'Flexion avant',mode:'hold',f:['fold'],say:'Flexion avant. Penche le buste, dos plat, mains vers le sol. Plie les genoux si besoin.',cue:'Ne force pas, laisse la gravité travailler.'},
   quadri:{name:'Étirement quadriceps',mode:'hold',f:['quad'],say:'Étirement des quadriceps. Attrape ton pied derrière toi et rapproche le talon des fesses.',cue:'Garde les genoux alignés.'},
@@ -541,26 +593,37 @@ const EX={
   boxe:{name:'Shadow boxing',mode:'reps',per:.7,f:['boxA','boxB'],say:'Boxe. Garde haute, enchaîne les coups de poing devant toi.'},
   sautes:{name:'Squats sautés',mode:'reps',per:1.4,f:['squatB','jumpB'],say:'Squats sautés. Descends en squat puis saute en levant les bras.'},
 };
-const CATS=[{id:'yoga',name:'Yoga'},{id:'renfo',name:'Renfo'},{id:'cardio',name:'Cardio'},{id:'etir',name:'Étirements'}];
+const CATS=[{id:'yoga',name:'Yoga'},{id:'reveil',name:'Réveil'},{id:'soir',name:'Soir'},{id:'renfo',name:'Renfo'},{id:'cardio',name:'Cardio'},{id:'etir',name:'Étirements'}];
 const ICP={run:'<circle cx="14.5" cy="4.5" r="2"/><path d="M7 21l3.5-5.5 3 2V22M5 11.5l3.5-3.5h5l2.5 4 3.5 1M10.5 15.5l2-7.5"/>',
   yoga:'<circle cx="12" cy="4.5" r="2"/><path d="M12 8.5v6.5M5 6.5l7 4 7-4M7.5 21l4.5-6 4.5 6"/>',
   renfo:'<path d="M3 10v4M6.5 7v10M17.5 7v10M21 10v4M6.5 12h11"/>',
   cardio:'<path d="M12 20s-7.5-4.6-7.5-10.2A4.2 4.2 0 0 1 12 7.3a4.2 4.2 0 0 1 7.5 2.5C19.5 15.4 12 20 12 20z"/>',
   etir:'<circle cx="17" cy="5" r="2"/><path d="M15.5 8.5L11 13.5 5 11.5M11 13.5l1.5 7.5M11 13.5l6 3"/>',
   home:'<path d="M4 11l8-7 8 7v9.5H4zM10 20.5v-6h4v6"/>',
-  stats:'<path d="M5 20v-7M11 20V5M17 20v-10M3 20.5h18"/>'};
+  stats:'<path d="M5 20v-7M11 20V5M17 20v-10M3 20.5h18"/>',
+  reveil:'<circle cx="12" cy="13" r="4"/><path d="M12 3v3M4.9 6.1l2 2M19.1 6.1l-2 2M2 13h3M19 13h3M3 20h18"/>',
+  soir:'<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>'};
 const ic=n=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICP[n]}</svg>`;
 document.querySelectorAll('[data-ic]').forEach(e=>e.insertAdjacentHTML('afterbegin',ic(e.dataset.ic)));
 const st=(ex,dur,side)=>({ex,dur,side});
 const rest=d=>st('rest',d);
 const SESS=[
-  {id:'reveil',cat:'yoga',name:'Réveil sakura',desc:'Debout, équilibre et ouverture pour démarrer la journée.',steps:[st('montagne',40),st('arbre',40,'droite'),st('arbre',40,'gauche'),st('guerrier',40,'droite'),st('guerrier',40,'gauche'),st('chien',45),st('cobra',40),st('enfant',60)]},
+  {id:'eveil',cat:'yoga',name:'Éveil du matin',desc:'Debout, équilibre et ouverture pour démarrer la journée.',steps:[st('montagne',40),st('arbre',40,'droite'),st('arbre',40,'gauche'),st('guerrier',40,'droite'),st('guerrier',40,'gauche'),st('chien',45),st('cobra',40),st('enfant',60)]},
+  {id:'soleil',cat:'yoga',name:'Salutation au soleil',desc:'L\'enchaînement classique : il réchauffe tout le corps.',steps:[st('montagne',30),st('chaise',35),st('flexion',35),st('planche',30),st('cobra',35),st('chien',40),st('guerrier1',35,'droite'),st('guerrier1',35,'gauche'),st('flexion',30),st('montagne',30)]},
+  {id:'equilibre',cat:'yoga',name:'Équilibre et force',desc:'Postures debout pour renforcer les jambes et la stabilité.',steps:[st('arbre',40,'droite'),st('arbre',40,'gauche'),st('chaise',35),st('triangle',40,'droite'),st('triangle',40,'gauche'),st('guerrier1',35,'droite'),st('guerrier1',35,'gauche'),st('bateau',30),st('enfant',45)]},
+  {id:'dos',cat:'yoga',name:'Dos souple',desc:'Au sol, pour assouplir et soulager le dos.',steps:[st('chatvache',60),st('sphinx',45),st('cobra',35),st('enfant',45),st('pince',50),st('pontYoga',35),st('genouxPoitrine',45)]},
+  {id:'reveilDoux',cat:'reveil',name:'Réveil en douceur',desc:'Commence au lit, finit debout. Tout en lenteur.',steps:[st('genouxPoitrine',40),st('assis',45),st('torsion',50),st('chatvache',50),st('lateral',45),st('flexion',35),st('montagne',35)]},
+  {id:'reveilLit',cat:'reveil',name:'Réveil au lit',desc:'Quatre minutes sans quitter le matelas.',steps:[st('genouxPoitrine',45),st('jambesMur',40),st('pontYoga',30),st('assis',45),st('torsion',50)]},
+  {id:'reveilTonique',cat:'reveil',name:'Réveil tonique',desc:'Pour se mettre en route quand la journée est chargée.',steps:[st('lateral',40),st('montagne',30),st('chaise',30),st('guerrier1',30,'droite'),st('guerrier1',30,'gauche'),st('chien',35),st('montagne',30)]},
+  {id:'dormir',cat:'soir',name:'Avant de dormir',desc:'Sept minutes au calme pour relâcher la journée.',steps:[st('assis',60),st('lateral',40),st('pince',50),st('enfant',50),st('genouxPoitrine',45),st('jambesMur',60),st('cadavre',90)]},
+  {id:'detente',cat:'soir',name:'Détente express',desc:'Quatre minutes, directement sur le lit.',steps:[st('pince',45),st('genouxPoitrine',40),st('jambesMur',60),st('cadavre',90)]},
+  {id:'apresJournee',cat:'soir',name:'Après une longue journée',desc:'Dos et jambes fatigués ? On dénoue tout.',steps:[st('assis',45),st('torsion',50),st('chatvache',50),st('sphinx',40),st('enfant',50),st('quadri',35,'droite'),st('quadri',35,'gauche'),st('jambesMur',60)]},
   {id:'lune',cat:'yoga',name:'Lune calme',desc:'Au sol, lent et doux, idéal le soir avant de dormir.',steps:[st('chatvache',60),st('enfant',50),st('cobra',40),st('chien',45),st('flexion',45),st('montagne',40)]},
   {id:'base',cat:'renfo',name:'Base solide',desc:'Jambes, bras et fessiers, sans matériel.',steps:[st('squat',45),rest(15),st('pompes',40),rest(15),st('fentes',45),rest(15),st('pont',45),rest(15),st('planche',40),rest(15),st('squat',45),rest(15),st('pont',45)]},
   {id:'gainage',cat:'renfo',name:'Ventre de fer',desc:'Gainage et pont pour un tronc solide.',steps:[st('planche',40),rest(20),st('pont',45),rest(15),st('climbers',30),rest(20),st('planche',45),rest(15),st('pont',45),rest(15),st('planche',30)]},
   {id:'hiit',cat:'cardio',name:'Express 7 min',desc:'30 s d\'effort, 15 s de repos, deux tours.',steps:[].concat(...[0,1].map(()=>['jacks','genoux','climbers','boxe','sautes'].flatMap(e=>[st(e,30),rest(15)])))},
   {id:'apres',cat:'etir',name:'Après la course',desc:'Relâche les jambes et le dos après l\'effort.',steps:[st('flexion',45),st('quadri',40,'droite'),st('quadri',40,'gauche'),st('chien',45),st('guerrier',35,'droite'),st('guerrier',35,'gauche'),st('enfant',60)]},
-  {id:'matin',cat:'etir',name:'Dérouillage',desc:'Cinq minutes pour réveiller tout le corps.',steps:[st('montagne',30),st('flexion',40),st('chatvache',60),st('quadri',35,'droite'),st('quadri',35,'gauche'),st('enfant',50),st('montagne',30)]},
+  {id:'matin',cat:'reveil',name:'Dérouillage',desc:'Cinq minutes pour réveiller tout le corps.',steps:[st('montagne',30),st('flexion',40),st('chatvache',60),st('quadri',35,'droite'),st('quadri',35,'gauche'),st('enfant',50),st('montagne',30)]},
 ];
 SESS.forEach(s=>{if(s.steps[s.steps.length-1].ex==='rest')s.steps.pop();s.total=s.steps.reduce((a,b)=>a+b.dur,0)});
 
@@ -586,6 +649,7 @@ function renderHeader(){const c=C();['#hdrAvatar','#homeAvatar','#pAvatar'].forE
 let calM=new Date();calM.setDate(1);
 function renderHome(){
   $('#demoNote').hidden=!hasDemo();
+  {const q=quickSess();$('#qYogaT').textContent=q.t;$('#qYogaS').textContent=q.s.name+' · '+Math.round(q.s.total/60)+' min';const ico=$('#qYoga .k');ico.innerHTML=ic(q.s.cat==='yoga'?'yoga':q.s.cat)}
   if(!phrase)phrase=coachPhrase();$('#homePhrase').textContent=phrase;
   const wk=new Date();const dow=(wk.getDay()+6)%7;wk.setHours(0,0,0,0);wk.setDate(wk.getDate()-dow);
   const inW=x=>new Date(x.date)>=wk;
@@ -607,7 +671,8 @@ $('#calPrev').onclick=()=>{calM.setMonth(calM.getMonth()-1);renderHome()};
 $('#calNext').onclick=()=>{calM.setMonth(calM.getMonth()+1);renderHome()};
 $('#sayPhrase').onclick=()=>say(phrase,true);
 $('#clearDemo').onclick=()=>{dropDemo();save();phrase='';render();toast('Exemples effacés')};
-$('#qYoga').onclick=()=>openPlayer(SESS[0]);
+function quickSess(){const h=new Date().getHours();if(h>=5&&h<11)return {s:SESS.find(x=>x.id==='reveilDoux'),t:'Réveil en douceur'};if(h>=20||h<5)return {s:SESS.find(x=>x.id==='dormir'),t:'Avant de dormir'};return {s:SESS.find(x=>x.id==='eveil'),t:'Yoga'}}
+$('#qYoga').onclick=()=>openPlayer(quickSess().s);
 $('#qRun').onclick=()=>show('run');
 
 /* dojo */
@@ -626,7 +691,7 @@ function renderDojo(){
 /* ---------- player ---------- */
 const PL={s:null,i:0,left:0,paused:false,phase:'ready',cur:null,from:null,tStart:0,lastTick:0,raf:0,said:{},elapsed:0};
 function openPlayer(s){
-  PL.s=s;PL.i=0;PL.phase='ready';PL.elapsed=0;
+  PL.s=s;PL.i=0;PL.phase='ready';PL.elapsed=0;soft=s.cat==='reveil'||s.cat==='soir';
   $('#player').hidden=false;document.body.style.overflow='hidden';
   $('#pTitle').textContent=s.name;$('#rdTitle').textContent=s.name;
   $('#rdList').innerHTML=s.steps.filter(x=>x.ex!=='rest').map(x=>`<li>${EX[x.ex].name}${x.side?' ('+x.side+')':''}</li>`).join('');
@@ -634,7 +699,7 @@ function openPlayer(s){
   PL.cur=POSE.stand;PL.from=POSE.stand;PL.tStart=performance.now();
   renderProg();cancelAnimationFrame(PL.raf);loop();
 }
-function closePlayer(){PL.phase='closed';cancelAnimationFrame(PL.raf);$('#player').hidden=true;document.body.style.overflow='';try{speechSynthesis.cancel()}catch(e){}keepAwake(false)}
+function closePlayer(){PL.phase='closed';soft=false;cancelAnimationFrame(PL.raf);$('#player').hidden=true;document.body.style.overflow='';try{speechSynthesis.cancel()}catch(e){}keepAwake(false)}
 $('#pClose').onclick=closePlayer;
 $('#pGo').onclick=()=>{beep(660,.05);$('#pReady').hidden=true;$('#pMain').hidden=false;keepAwake(true);countdown()};
 function countdown(){PL.phase='count';const el=$('#pCount');el.hidden=false;let n=3;say(C().go);
@@ -654,7 +719,7 @@ function startStep(){PL.phase='run';PL.paused=false;$('#pPause').textContent='Pa
   else say(e.say+(step.side?' Côté '+step.side+'.':''));
 }
 function nextStep(){if(PL.i>=PL.s.steps.length-1){finish();return}setStep(PL.i+1);startStep()}
-function finish(){PL.phase='done';const s=PL.s;say(C().end);beep(988,.15);setTimeout(()=>beep(1318,.3),160);
+function finish(){PL.phase='done';const s=PL.s;say(s.cat==='soir'?C().night:s.cat==='reveil'?C().morning:C().end);beep(988,.15);setTimeout(()=>beep(1318,.3),160);
   const sec=Math.round(PL.elapsed);
   if(sec>=30){S.sessions.push({id:uid(),date:new Date().toISOString(),cat:s.cat,name:s.name,sec});realSave();phrase=''}
   $('#pName').textContent='Terminé !';$('#pJp').textContent='Séance terminée';$('#pSide').textContent='';$('#pSay').textContent=sec>=30?`${fmtT(sec)} de séance. Un tampon a été ajouté à ton calendrier.`:'Séance trop courte pour être enregistrée.';
@@ -675,8 +740,9 @@ function loop(){
     $('#pSec').textContent=Math.max(0,L);$('#pArc').style.strokeDashoffset=238.76*(1-Math.max(0,PL.left)/step.dur);
     const bar=$('#pBar');if(bar)bar.style.width=(100*(1-Math.max(0,PL.left)/step.dur))+'%';
     if(step.ex!=='rest'){
-      if(!PL.said.half&&PL.left<=step.dur/2&&step.dur>=25){PL.said.half=1;say(e.cue||pick(C().enc))}
-      if(!PL.said.five&&PL.left<=5.2&&step.dur>=20){PL.said.five=1;say(C().five)}
+      if(e.breath){const el=step.dur-PL.left;if(el>=8&&PL.left>3){const k=Math.floor((el-8)/4.5);if(PL.said.br!==k){PL.said.br=k;const inh=k%2===0;$('#pSay').innerHTML='<span class="breath">'+(inh?'Inspire par le nez…':'Expire lentement…')+'</span>';if(k<8)say(inh?C().inhale:C().exhale)}}}
+      else if(!PL.said.half&&PL.left<=step.dur/2&&step.dur>=25){PL.said.half=1;say(e.cue||pick(C().enc))}
+      if(!e.breath&&!PL.said.five&&PL.left<=5.2&&step.dur>=20){PL.said.five=1;say(C().five)}
     }
     if(!PL.said['b'+L]&&L<=3&&L>=1){PL.said['b'+L]=1;beep(L===1?990:760,.08)}
     if(PL.left<=0)nextStep();
@@ -706,7 +772,7 @@ $$('#goalSeg button').forEach(b=>b.onclick=()=>{goalType=b.dataset.g;$$('#goalSe
 function setGps(cls,txt){const e=$('#gpsState');e.className='gps '+cls;e.querySelector('span').textContent=txt}
 function startRun(sim){
   R.goal={t:goalType,v:goalType==='dist'?parseFloat($('#goalDist').value)||5:goalType==='time'?parseFloat($('#goalTime').value)||30:0};
-  R.state='count';R.acc=0;R.dist=0;R.pts=[];R.last=null;R.said={};R.gpsFail=false;R.sim=sim;
+  R.state='count';R.acc=0;R.dist=0;R.pts=[];R.last=null;R.here=null;{const o=mapBox('mapLive');o.follow=true;o.rc.hidden=true}R.said={};R.gpsFail=false;R.sim=sim;
   $('#runIdle').hidden=true;$('#runLive').hidden=false;$('#runDone').hidden=true;$('#runTitle').textContent=sim?'Course simulée':'Course en cours';$('#gpsBanner').hidden=true;
   $('#goalLive').hidden=R.goal.t==='free';$('#goalLbl').textContent=R.goal.t==='dist'?'Objectif '+fr(R.goal.v,1)+' km':R.goal.t==='time'?'Objectif '+R.goal.v+' min':'';
   $('#runPause').textContent='Pause';$('#rTime').textContent='00:00';clearInterval(R.timer);
@@ -739,7 +805,7 @@ function startGps(){
 }
 function stopGps(){clearInterval(R.simT);try{if(R.watch!==null)navigator.geolocation.clearWatch(R.watch)}catch(e){}R.watch=null}
 function onPos(pos){
-  const a=pos.coords.accuracy;if(!R.sim)setGps(a<=20?'ok':'warn',a<=20?'GPS précis ('+Math.round(a)+' m)':'GPS approximatif ('+Math.round(a)+' m)');
+  R.here=[pos.coords.latitude,pos.coords.longitude];const a=pos.coords.accuracy;if(!R.sim)setGps(a<=20?'ok':'warn',a<=20?'GPS précis ('+Math.round(a)+' m)':'GPS approximatif ('+Math.round(a)+' m)');
   if(R.state!=='run'||a>35)return;
   const p=[pos.coords.latitude,pos.coords.longitude,pos.timestamp||Date.now()];
   if(R.last){const d=hav(R.last,p),dt=(p[2]-R.last[2])/1000;if(d<3)return;if(dt>0&&d/dt>12)return;R.dist+=d}
@@ -754,7 +820,7 @@ function runTick(){
     $('#goalPct').textContent=Math.min(100,Math.round(pct*100))+' %';$('#goalBar').style.width=Math.min(100,pct*100)+'%';
     if(pct>=.5&&!R.said.half){R.said.half=1;say(S.coach==='kenta'?'Moitié de l\'objectif ! On garde le rythme !':'Tu es à la moitié de ton objectif. Très bien.')}
     if(pct>=1&&!R.said.full){R.said.full=1;beep(988,.15);setTimeout(()=>beep(1318,.3),160);say(S.coach==='kenta'?'Objectif atteint ! Énorme !':'Objectif atteint. Bravo, tu peux être fier de toi.')}}
-  drawTrace($('#traceLive'),R.pts);
+  showRoute('mapLive',R.pts,{follow:true,here:R.here});
 }
 $('#runPause').onclick=()=>{if(R.state==='run'){R.acc=elapsed();R.state='pause';$('#runPause').textContent='Reprendre';say('Pause.')}else if(R.state==='pause'){R.state='run';R.resume=Date.now();R.last=null;$('#runPause').textContent='Pause';say('On repart.')}};
 $('#runStop').onclick=()=>{R.acc=elapsed();R.state='done';clearInterval(R.timer);stopGps();keepAwake(false);
@@ -764,7 +830,7 @@ $('#manualDist').oninput=renderDone;
 function doneDist(){if(!$('#manualDistF').hidden){const v=parseFloat(String($('#manualDist').value).replace(',','.'));return isFinite(v)&&v>0?v*1000:0}return R.dist}
 function renderDone(){const t=R.acc,d=doneDist();
   $('#doneStats').innerHTML=`<div class="tile"><div class="v">${fmtT(t)}</div><div class="l">Temps</div></div><div class="tile"><div class="v">${fr(d/1000,2)}<small>km</small></div><div class="l">Distance</div></div><div class="tile"><div class="v">${d?fr(d/t*3.6,1):'—'}<small>km/h</small></div><div class="l">Vitesse moy.</div></div><div class="tile" style="grid-column:span 3"><div class="v">${fmtPace(t,d)}<small>min/km</small></div><div class="l">Allure moyenne</div></div>`;
-  $('#traceDone').hidden=R.pts.length<2;drawTrace($('#traceDone'),R.pts)}
+  $('#mapDone').hidden=R.pts.length<2;if(R.pts.length>=2){const o=mapBox('mapDone');o.fitted=false;showRoute('mapDone',R.pts,{fit:true})}}
 function resetRun(){R.state='idle';$('#runIdle').hidden=false;$('#runLive').hidden=true;$('#runDone').hidden=true;$('#runTitle').textContent='Prêt à courir ?'}
 $('#runDiscard').onclick=()=>{resetRun();toast('Course non enregistrée')};
 $('#runSave').onclick=()=>{const d=doneDist(),t=Math.round(R.acc);if(t<10){toast('Course trop courte');return}
@@ -782,6 +848,41 @@ function simplify(a,max){if(a.length<=max)return a;const s=a.length/max,o=[];for
 function project(pts,W,H,padd){if(pts.length<2)return null;const lat0=pts[0][0]*RAD;let xs=pts.map(p=>p[1]*Math.cos(lat0)),ys=pts.map(p=>p[0]);
   const x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys);const sc=Math.min((W-2*padd)/Math.max(1e-9,x1-x0),(H-2*padd)/Math.max(1e-9,y1-y0));
   const ox=(W-(x1-x0)*sc)/2,oy=(H-(y1-y0)*sc)/2;return pts.map((p,i)=>[ox+(xs[i]-x0)*sc,H-(oy+(ys[i]-y0)*sc)])}
+const TILE='https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+let tilesOK=null;
+(function probe(){if(!window.L){tilesOK=false;return}const im=new Image();let done=false;
+  const end=v=>{if(done)return;done=true;tilesOK=v;Object.keys(MB).forEach(k=>MB[k].redraw&&MB[k].redraw())};
+  im.onload=()=>end(true);im.onerror=()=>end(false);setTimeout(()=>end(false),8000);
+  im.src='https://a.basemaps.cartocdn.com/light_all/0/0/0.png'})();
+const MB={};
+function mapBox(id){if(MB[id])return MB[id];const box=$('#'+id);
+  const o={box,cv:box.querySelector('canvas'),el:box.querySelector('.lmap'),rc:box.querySelector('.recenter'),tag:box.querySelector('.maptag'),m:null,follow:true,pts:[],opt:{}};
+  o.rc.onclick=()=>{o.follow=true;o.rc.hidden=true;o.redraw()};
+  o.redraw=()=>showRoute(id,o.pts,o.opt);
+  MB[id]=o;return o}
+function ensureMap(o){if(o.m||!window.L)return o.m;
+  try{o.m=L.map(o.el,{zoomControl:false,attributionControl:true});o.m.attributionControl.setPrefix(false);
+    L.tileLayer(TILE,{maxZoom:19,subdomains:'abcd',attribution:'© OpenStreetMap © CARTO'}).addTo(o.m);
+    o.line=L.polyline([],{color:'#1FA2DE',weight:5,opacity:.9,lineJoin:'round'}).addTo(o.m);
+    o.start=L.circleMarker([0,0],{radius:6,color:'#fff',weight:2,fillColor:'#7CBF2E',fillOpacity:1});
+    o.dot=L.circleMarker([0,0],{radius:8,color:'#fff',weight:3,fillColor:'#1FA2DE',fillOpacity:1});
+    o.m.on('dragstart zoomstart',e=>{if(o.opt.follow&&e.type==='dragstart'){o.follow=false;o.rc.hidden=false}});
+    o.m.setView([46.6,2.4],5)}catch(e){o.m=null}
+  return o.m}
+function showRoute(id,pts,opt={}){
+  const o=mapBox(id);o.pts=pts;o.opt=opt;
+  const useMap=tilesOK===true&&!!ensureMap(o);
+  o.el.hidden=!useMap;o.cv.hidden=useMap;o.tag.hidden=true;if(!useMap)o.rc.hidden=true;
+  if(!useMap){drawTrace(o.cv,pts);return}
+  if(!o.box.offsetWidth)return;
+  o.m.invalidateSize({animate:false});
+  const ll=pts.map(p=>[p[0],p[1]]);o.line.setLatLngs(ll);
+  const here=ll.length?ll[ll.length-1]:opt.here||null;
+  if(ll.length)o.start.setLatLng(ll[0]).addTo(o.m);else o.start.remove();
+  if(here)o.dot.setLatLng(here).addTo(o.m);else o.dot.remove();
+  if(opt.follow){if(o.follow&&here)o.m.setView(here,Math.max(o.m.getZoom()||0,16),{animate:false})}
+  else if(opt.fit&&!o.fitted){o.fitted=true;if(ll.length>1)o.m.fitBounds(o.line.getBounds(),{padding:[28,28],maxZoom:17});else if(here)o.m.setView(here,16)}
+}
 function drawTrace(cv,pts){const [w,h]=sizeCanvas(cv),ctx=cv.getContext('2d'),c=colors();ctx.clearRect(0,0,w,h);
   const d=Math.min(2,window.devicePixelRatio||1);
   ctx.strokeStyle=c.l;ctx.lineWidth=1;for(let x=0;x<w;x+=28*d){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke()}for(let y=0;y<h;y+=28*d){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke()}
@@ -798,10 +899,19 @@ function bindDel(root){root.querySelectorAll('[data-del]').forEach(b=>b.onclick=
   if(armed===k+id){S[k]=S[k].filter(x=>x.id!==id);save();armed=null;phrase='';toast('Supprimé')}else armed=k+id;render()})}
 function renderRun(){
   const runs=[...S.runs].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,8);
-  $('#runList').innerHTML=runs.length?runs.map(r=>`<div class="li">${miniTrace(r.pts)}<div style="min-width:0"><div class="t">${fr(r.dist/1000,2)} km · ${fmtT(r.time)}${r.demo?'<span class="tag">exemple</span>':''}</div><div class="s">${fdate(r.date)} · ${fr(r.dist/r.time*3.6,1)} km/h · ${fmtPace(r.time,r.dist)}/km</div></div>${delBtn('runs',r.id)}</div>`).join(''):'<div class="empty">Aucune course pour l\'instant. Lance ta première !</div>';
+  $('#runList').innerHTML=runs.length?runs.map(r=>`<div class="li tap" data-run="${r.id}" role="button" tabindex="0">${miniTrace(r.pts)}<div style="min-width:0"><div class="t">${fr(r.dist/1000,2)} km · ${fmtT(r.time)}${r.demo?'<span class="tag">exemple</span>':''}</div><div class="s">${fdate(r.date)} · ${fr(r.dist/r.time*3.6,1)} km/h · ${fmtPace(r.time,r.dist)}/km</div></div>${delBtn('runs',r.id)}</div>`).join(''):'<div class="empty">Aucune course pour l\'instant. Lance ta première !</div>';
   bindDel($('#runList'));
-  if(R.state==='idle'){drawTrace($('#traceLive'),[])}
+  $$('#runList [data-run]').forEach(el=>{const open=e=>{if(e.target.closest('[data-del]'))return;openRoute(el.dataset.run)};el.onclick=open;el.onkeydown=e=>{if(e.key==='Enter')open(e)}});
 }
+
+function openRoute(id){const r=S.runs.find(x=>x.id===id);if(!r)return;
+  const d=new Date(r.date);$('#rsDate').textContent=d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'})+' · '+pad(d.getHours())+'h'+pad(d.getMinutes());
+  $('#rsTitle').textContent=fr(r.dist/1000,2)+' km';
+  $('#rsStats').innerHTML=`<div class="tile"><div class="v">${fmtT(r.time)}</div><div class="l">Temps</div></div><div class="tile"><div class="v">${fr(r.dist/r.time*3.6,1)}<small>km/h</small></div><div class="l">Vitesse moy.</div></div><div class="tile"><div class="v">${fmtPace(r.time,r.dist)}</div><div class="l">Allure /km</div></div>`;
+  $('#routeSheet').hidden=false;const o=mapBox('mapSheet');o.fitted=false;
+  requestAnimationFrame(()=>showRoute('mapSheet',r.pts||[],{fit:true}))}
+$('#rsClose').onclick=()=>$('#routeSheet').hidden=true;
+$('#routeSheet').onclick=e=>{if(e.target.id==='routeSheet')$('#routeSheet').hidden=true};
 
 /* stats */
 function records(){const r=S.runs;if(!r.length)return {};const far=r.reduce((a,b)=>b.dist>a.dist?b:a);const long=r.reduce((a,b)=>b.time>a.time?b:a);
