@@ -244,7 +244,7 @@ nav.tabs button[aria-current="page"]{color:var(--sakura)}
       <div class="demo-note" id="demoNote" hidden><span>Ce sont des données d'exemple pour voir à quoi ressemble le site.</span><button id="clearDemo">Effacer</button></div>
       <div class="coach">
         <div class="avatar" id="homeAvatar">H</div>
-        <div class="bubble" id="homeBubble"><div class="who" id="homeWho">Hana</div><p id="homePhrase">…</p><button class="link" id="sayPhrase">Écouter</button></div>
+        <div class="bubble" id="homeBubble"><div class="who" id="homeWho">Hana</div><p id="homePhrase" style="margin-bottom:0">…</p></div>
       </div>
       <div class="quick">
         <button class="qbtn a" id="qYoga"><span class="k" data-ic="yoga"></span><strong id="qYogaT">Yoga du matin</strong><small id="qYogaS">Éveil du matin · 6 min</small></button>
@@ -380,14 +380,12 @@ nav.tabs button[aria-current="page"]{color:var(--sakura)}
     <div class="row" style="align-items:center"><h2 style="font-size:22px">Réglages</h2><button class="iconbtn" id="closeSettings" style="flex:none">Fermer</button></div>
     <div class="label">Ton coach</div>
     <div class="coaches">
-      <button class="cpick" data-c="hana"><span class="avatar">H</span><strong>Hana</strong><small>Douce et posée, voix aiguë</small></button>
-      <button class="cpick" data-c="kenta"><span class="avatar kenta">K</span><strong>Kenta</strong><small>Énergique, voix grave</small></button>
+      <button class="cpick" data-c="hana"><span class="avatar">H</span><strong>Hana</strong><small>Douce et posée</small></button>
+      <button class="cpick" data-c="kenta"><span class="avatar kenta">K</span><strong>Kenta</strong><small>Énergique et motivant</small></button>
     </div>
-    <button class="go ghost" id="testVoice">Tester la voix</button>
-    <label class="switch" for="voiceOn">Le coach parle pendant les séances<input type="checkbox" id="voiceOn"></label>
     <div class="label">Données</div>
     <p class="empty" style="margin:0">Tout est enregistré dans ce navigateur, sur ce téléphone.</p>
-    <p class="empty" style="margin:0;font-size:12px">Version 1.3 · carte OpenStreetMap</p>
+    <p class="empty" style="margin:0;font-size:12px">Version 1.4 · sans voix</p>
     <div class="row" style="flex-wrap:wrap"><button class="danger" id="resetAll">Tout effacer</button></div>
   </div>
 </div>
@@ -461,6 +459,7 @@ let voices=[];
 function loadVoices(){try{voices=speechSynthesis.getVoices().filter(v=>/^fr/i.test(v.lang))}catch(e){voices=[]}}
 if('speechSynthesis' in window){loadVoices();speechSynthesis.onvoiceschanged=loadVoices}
 function say(text,force){
+  return; // voix désactivée
   if((!S.voice&&!force)||!('speechSynthesis' in window))return;
   try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang='fr-FR';
     const c=C();const v=voices.find(v=>c.prefer.test(v.name))||voices.find(v=>/fr-FR/i.test(v.lang))||voices[0];
@@ -671,7 +670,6 @@ function renderHome(){
 }
 $('#calPrev').onclick=()=>{calM.setMonth(calM.getMonth()-1);renderHome()};
 $('#calNext').onclick=()=>{calM.setMonth(calM.getMonth()+1);renderHome()};
-$('#sayPhrase').onclick=()=>say(phrase,true);
 $('#clearDemo').onclick=()=>{dropDemo();save();phrase='';render();toast('Exemples effacés')};
 function quickSess(){const h=new Date().getHours();if(h>=5&&h<11)return {s:SESS.find(x=>x.id==='reveilDoux'),t:'Réveil en douceur'};if(h>=20||h<5)return {s:SESS.find(x=>x.id==='dormir'),t:'Avant de dormir'};return {s:SESS.find(x=>x.id==='eveil'),t:'Yoga'}}
 $('#qYoga').onclick=()=>openPlayer(quickSess().s);
@@ -954,13 +952,11 @@ $('#wAdd').onclick=()=>{const kg=parseFloat(String($('#wKg').value).replace(',',
   const d=$('#wDate').value||dkey(new Date());S.weights=S.weights.filter(x=>x.demo||x.date!==d);S.weights.push({id:uid(),date:d,kg:Math.round(kg*10)/10});realSave();$('#wKg').value='';toast('Pesée ajoutée');render()};
 
 /* settings */
-function openSettings(){$('#settings').hidden=false;$$('.cpick').forEach(b=>b.setAttribute('aria-pressed',b.dataset.c===S.coach));$('#voiceOn').checked=!!S.voice}
+function openSettings(){$('#settings').hidden=false;$$('.cpick').forEach(b=>b.setAttribute('aria-pressed',b.dataset.c===S.coach))}
 $('#openSettings').onclick=openSettings;
 $('#closeSettings').onclick=()=>$('#settings').hidden=true;
 $('#settings').onclick=e=>{if(e.target.id==='settings')$('#settings').hidden=true};
 $$('.cpick').forEach(b=>b.onclick=()=>{S.coach=b.dataset.c;save();phrase='';openSettings();renderHeader();render();say(C().first,true)});
-$('#testVoice').onclick=()=>say(C().first,true);
-$('#voiceOn').onchange=e=>{S.voice=e.target.checked;save()};
 let resetArmed=false;
 $('#resetAll').onclick=()=>{const b=$('#resetAll');if(!resetArmed){resetArmed=true;b.classList.add('armed');b.textContent='Confirmer : tout effacer';setTimeout(()=>{resetArmed=false;b.classList.remove('armed');b.textContent='Tout effacer'},4000);return}
   S={coach:S.coach,voice:S.voice,runs:[],sessions:[],weights:[]};save();resetArmed=false;b.classList.remove('armed');b.textContent='Tout effacer';phrase='';$('#settings').hidden=true;render();toast('Toutes les données ont été effacées')};
