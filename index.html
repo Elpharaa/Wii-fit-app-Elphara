@@ -310,6 +310,12 @@ nav.tabs button[aria-current="page"]{color:var(--sakura)}
 .g-over .row{width:100%;max-width:320px}
 nav.tabs .in{grid-template-columns:repeat(5,1fr)!important}
 nav.tabs button{font-size:11px!important}
+.howto{margin-top:12px;font-size:14px}
+.howto summary{cursor:pointer;font-weight:700;color:var(--sakura)}
+.howto p{margin:8px 0 0;color:var(--ink-2);line-height:1.5}
+.howto b{color:var(--ink)}
+.howto code{font-family:var(--f-mono);font-size:12px;background:var(--surface-2);border-radius:6px;padding:1px 5px;word-break:break-all}
+.go:disabled{opacity:.4}
 .toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:40;
   background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-weight:700;font-size:14px;max-width:90vw;text-align:center}
 </style>
@@ -433,6 +439,7 @@ nav.tabs button{font-size:11px!important}
       <div class="tiles four" id="totTiles"></div>
       <div class="card"><div class="row" style="align-items:baseline;margin-bottom:12px"><div class="label">Badges</div><span class="num" id="bCount" style="flex:none;font-size:13px;color:var(--ink-2)"></span></div><div class="badges" id="badgeGrid"></div></div>
       <div class="card"><div class="label" style="margin-bottom:8px">Records de course</div><dl class="rec" id="records" style="margin:0"></dl></div>
+      <div class="card" id="wiiCard"><div class="row" style="align-items:center;margin-bottom:10px"><div class="label">Wii Fit Plus</div><span class="tag" style="flex:none;margin:0">import</span></div><div id="wiiBody"></div><input type="file" id="wfFile" hidden></div>
       <div class="card" style="display:flex;flex-direction:column;gap:12px">
         <div class="label">Poids</div>
         <div class="row">
@@ -502,7 +509,7 @@ nav.tabs button{font-size:11px!important}
     </div>
     <div class="label">Données</div>
     <p class="empty" style="margin:0">Tout est enregistré dans ce navigateur, sur ce téléphone.</p>
-    <p class="empty" style="margin:0;font-size:12px">Version 2.0 · badges, séances perso, plans, jeux</p>
+    <p class="empty" style="margin:0;font-size:12px">Version 2.1 · import Wii Fit Plus</p>
     <div class="row" style="flex-wrap:wrap"><button class="danger" id="resetAll">Tout effacer</button></div>
   </div>
 </div>
@@ -1101,12 +1108,13 @@ function renderStats(){
   // weight
   const W=[...S.weights].sort((a,b)=>a.date<b.date?-1:1);
   $('#wChart').innerHTML=weightChart(W);
-  $('#wList').innerHTML=W.length?[...W].reverse().slice(0,6).map(w=>`<div class="li" style="grid-template-columns:1fr auto auto"><div class="s" style="font-size:13px">${fdate(w.date)}${w.demo?'<span class="tag">exemple</span>':''}</div><div class="num" style="font-weight:500">${fr(w.kg,1)} kg</div>${delBtn('weights',w.id)}</div>`).join(''):'';
+  $('#wList').innerHTML=W.length?[...W].reverse().slice(0,6).map(w=>`<div class="li" style="grid-template-columns:1fr auto auto"><div class="s" style="font-size:13px">${fdate(w.date)}${new Date(w.date).getFullYear()!==new Date().getFullYear()?' '+new Date(w.date).getFullYear():''}${w.demo?'<span class="tag">exemple</span>':''}${w.src==='wii'?'<span class="tag">Wii Fit</span>':''}</div><div class="num" style="font-weight:500">${fr(w.kg,1)} kg</div>${delBtn('weights',w.id)}</div>`).join(''):'';
   bindDel($('#wList'));
   const ss=[...S.sessions].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,8);
   $('#sessHist').innerHTML=ss.length?ss.map(s=>`<div class="li"><div class="k">${ic(s.cat)}</div><div style="min-width:0"><div class="t">${s.name}${s.demo?'<span class="tag">exemple</span>':''}</div><div class="s">${fdate(s.date)} · ${fmtT(s.sec)}</div></div>${delBtn('sessions',s.id)}</div>`).join(''):'<div class="empty">Termine une séance à la maison pour la voir ici.</div>';
   bindDel($('#sessHist'));
   renderBadges();
+  renderWii();
 }
 function weightChart(W){
   if(W.length<2)return `<div class="empty">${W.length?'Ajoute une deuxième pesée pour voir la courbe.':'Aucune pesée pour l\'instant.'}</div>`;
@@ -1122,8 +1130,8 @@ function weightChart(W){
   <polyline points="${line}" fill="none" stroke="var(--sakura)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
   ${W.map(x=>`<circle cx="${X(x.date)}" cy="${Y(x.kg)}" r="3" fill="var(--surface)" stroke="var(--sakura)" stroke-width="2"/>`).join('')}
   <circle cx="${X(L.date)}" cy="${Y(L.kg)}" r="5.5" fill="var(--sakura)"/>
-  <text x="${l}" y="${h-6}" font-size="11" fill="var(--ink-2)">${fdate(W[0].date)}</text>
-  <text x="${w-r}" y="${h-6}" text-anchor="end" font-size="11" fill="var(--ink-2)">${fdate(L.date)}</text></svg>`;
+  <text x="${l}" y="${h-6}" font-size="11" fill="var(--ink-2)">${fdate(W[0].date)+(t1-t0>3e10?' '+new Date(W[0].date).getFullYear():'')}</text>
+  <text x="${w-r}" y="${h-6}" text-anchor="end" font-size="11" fill="var(--ink-2)">${fdate(L.date)+(t1-t0>3e10?' '+new Date(L.date).getFullYear():'')}</text></svg>`;
 }
 $('#wDate').value=dkey(new Date());
 $('#wAdd').onclick=()=>{const kg=parseFloat(String($('#wKg').value).replace(',','.'));if(!(kg>=20&&kg<=300)){toast('Entre un poids entre 20 et 300 kg');return}
@@ -1149,7 +1157,7 @@ function bstats(){const runs=S.runs.filter(x=>!x.demo),ses=S.sessions.filter(x=>
     totKm:runs.reduce((a,r)=>a+r.dist,0)/1000,streak:bestStreak(dates),home:ses.length,yoga:ses.filter(s=>s.cat==='yoga').length,night:ses.filter(s=>s.cat==='soir').length,
     early:dates.some(d=>{const h=new Date(d).getHours();return h>=4&&h<8}),inter:runs.some(r=>r.prog&&r.prog.done&&r.prog.kind==='inter'),
     planWeek:Object.values(weeks).some(n=>n>=3),planEnd:S.plan.done.length>=24,custom:S.custom.length,plays:g.table.plays+g.slalom.plays,
-    champ:g.table.best>=10||!!g.slalom.perfect}}
+    champ:g.table.best>=10||!!g.slalom.perfect,wii:!!S.wiifit}}
 const BADGES=[
  ['first','Premier pas','Termine ta première activité','blue','star',s=>[s.acts,1]],
  ['run1','Baskets lacées','Termine ta première course','bronze','run',s=>[s.runs,1]],
@@ -1169,6 +1177,7 @@ const BADGES=[
  ['inter','Fractionné','Termine une course en fractionné','silver','bolt',s=>[s.inter?1:0,1]],
  ['planW','Semaine validée','Termine une semaine du plan 5 km','bronze','flag',s=>[s.planWeek?1:0,1]],
  ['planEnd','Objectif 5 km','Termine tout le plan 5 km','gold','flag',s=>[s.planEnd?1:0,1]],
+ ['wii','Ancien de la Wii','Importe ta sauvegarde Wii Fit Plus','silver','game',s=>[s.wii?1:0,1]],
  ['maker','Créateur','Crée ta propre séance','blue','plus',s=>[s.custom,1]],
  ['gamer','Joueur','Joue à un mini-jeu','bronze','game',s=>[s.plays,1]],
  ['champ','Champion','10 points à la table inclinée, ou un slalom sans porte ratée','gold','trophy',s=>[s.champ?1:0,1]],
@@ -1390,6 +1399,60 @@ function slalomDraw(ctx,K,w,h,still){ctx.fillStyle='#FBFDFF';ctx.fillRect(0,0,w,
   K.pop.forEach(p=>{ctx.globalAlpha=Math.min(1,p.t*1.6);ctx.fillStyle=p.c;ctx.font=`800 ${Math.round(s*1.1)}px ${FD}`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(p.txt,p.x,p.y-oy-s*2-(1-p.t)*s*2);ctx.globalAlpha=1});
   if(!still)$('#gHud').textContent=fmtGT(K.t)+(K.pen?' +'+K.pen+' s':'')+' · '+Math.min(K.ok+K.miss+1,K.gates.length)+'/'+K.gates.length}
 
+/* ---------- import Wii Fit Plus ---------- */
+/*WFPARSE_START*/
+function parseWiiFit(buf){const u=new Uint8Array(buf),dv=new DataView(buf),starts=[];
+  for(let i=0;i+8<=u.length;i++){if(u[i]===0x52&&u[i+1]===0x50&&u[i+2]===0x48&&u[i+3]===0x45&&u[i+4]===0x30&&u[i+5]===0x30&&u[i+6]===0x30&&u[i+7]===0x30){starts.push(i);i+=0x3000}}
+  const bcd=b=>(b>>4)*10+(b&15),out=[];
+  starts.forEach((s,k)=>{const end=k+1<starts.length?starts[k+1]:u.length;if(s+0x38A1>end)return;
+    let name='';for(let j=0;j<11;j++){const c=dv.getUint16(s+8+j*2,false);if(!c)break;name+=String.fromCharCode(c)}name=name.trim();
+    const height=u[s+0x1F];const by=bcd(u[s+0x20])*100+bcd(u[s+0x21]),bm=bcd(u[s+0x22]),bd=bcd(u[s+0x23]);
+    const birth=by>1900&&by<2030&&bm>=1&&bm<=12&&bd>=1&&bd<=31?by+'-'+pad(bm)+'-'+pad(bd):null;
+    const tests=[];for(let o=s+0x38A1;o+21<=end&&tests.length<6000;o+=21){const p=dv.getUint32(o,false),y=p>>>20&0x7ff;if(!y)break;
+      const mo=(p>>>16&0xf)+1,d=p>>>11&0x1f,h=p>>>6&0x1f,mi=p&0x3f,kg=dv.getUint16(o+4,false)/10,bmi=dv.getUint16(o+6,false)/100,bal=dv.getUint16(o+8,false)/10;
+      if(y<2007||y>2040||mo>12||d<1||d>31||h>23||mi>59||kg<10||kg>250)continue;
+      tests.push({t:new Date(y,mo-1,d,h,mi).toISOString(),kg,bmi:bmi>5&&bmi<80?bmi:null,bal:bal>0&&bal<=100?bal:null})}
+    if(name||tests.length)out.push({name:name||'Mii sans nom',height:height>=50&&height<=230?height:null,birth,tests})});
+  return out}
+/*WFPARSE_END*/
+let WF=null;
+function renderWii(){const box=$('#wiiBody'),w=S.wiifit;
+  if(WF){box.innerHTML=`<div class="label" style="margin-bottom:8px">${WF.length>1?'Choisis ton Mii':'Profil trouvé'}</div><div class="list">${WF.map((p,i)=>{const t=p.tests,last=t[t.length-1];
+      return `<div class="li" style="grid-template-columns:44px minmax(0,1fr) auto"><div class="k">${ic('star')}</div><div style="min-width:0"><div class="t">${esc(p.name)}</div><div class="s">${t.length} test${t.length>1?'s':''}${t.length?' · '+fdate(t[0].t)+' '+new Date(t[0].t).getFullYear()+' → '+fdate(last.t)+' '+new Date(last.t).getFullYear():''}</div></div><button class="go" data-wf="${i}" style="padding:10px 16px" ${t.length?'':'disabled'}>Importer</button></div>`}).join('')}</div>
+      <button class="link" id="wfCancel" style="margin-top:8px">Annuler</button>`;
+    $$('#wiiBody [data-wf]').forEach(b=>b.onclick=()=>importWii(WF[+b.dataset.wf]));$('#wfCancel').onclick=()=>{WF=null;renderWii()};return}
+  if(w){const t=w.tests,last=t[t.length-1],age=w.birth?Math.floor((Date.now()-new Date(w.birth+'T12:00:00'))/(365.25*864e5)):null;
+    const bmiTxt=b=>b==null?'—':fr(b,1)+'<small>'+(b<18.5?'maigreur':b<25?'normal':b<30?'surpoids':'obésité')+'</small>';
+    box.innerHTML=`<div class="coach" style="grid-template-columns:44px 1fr;gap:12px;align-items:center"><div class="avatar sm" style="background:var(--matcha)">${esc(w.name.charAt(0).toUpperCase())}</div>
+      <div><div class="t" style="font-weight:800;font-size:16px">${esc(w.name)}</div><div class="s" style="font-size:12px;color:var(--ink-2)">${[w.height?fr(w.height/100,2)+' m':'',age?age+' ans':'',t.length+' tests importés'].filter(Boolean).join(' · ')}</div></div></div>
+      <div class="tiles" style="margin-top:12px"><div class="tile"><div class="v">${fr(last.kg,1)}<small>kg</small></div><div class="l">dernier test</div></div>
+      <div class="tile"><div class="v">${last.bmi==null?'—':fr(last.bmi,1)}</div><div class="l">IMC${last.bmi==null?'':' · '+(last.bmi<18.5?'maigreur':last.bmi<25?'normal':last.bmi<30?'surpoids':'obésité')}</div></div>
+      <div class="tile"><div class="v">${last.bal==null?'—':fr(last.bal,1)}<small>%</small></div><div class="l">équilibre (50 = centré)</div></div></div>
+      <p class="empty" style="margin:10px 0 0;font-size:13px">Dernier test le ${new Date(last.t).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'})}. Tes pesées Wii Fit sont ajoutées à la courbe de poids ci-dessous.</p>
+      <div class="row" style="margin-top:10px;flex-wrap:wrap"><button class="go ghost" id="wfAgain">Mettre à jour</button><button class="danger" id="wfRemove" style="flex:none">Retirer</button></div>`;
+    $('#wfAgain').onclick=()=>$('#wfFile').click();
+    let armedRm=false;$('#wfRemove').onclick=()=>{const b=$('#wfRemove');if(!armedRm){armedRm=true;b.classList.add('armed');b.textContent='Confirmer';setTimeout(()=>{armedRm=false;b.classList.remove('armed');b.textContent='Retirer'},3500);return}
+      S.weights=S.weights.filter(x=>x.src!=='wii');S.wiifit=null;save();toast('Données Wii Fit retirées');renderStats()};return}
+  box.innerHTML=`<p class="empty" style="margin:0;font-size:14px">Récupère l'historique de tes tests de forme Wii Fit Plus : poids, IMC et équilibre, avec ton profil Mii.</p>
+    <button class="go" id="wfPick" style="margin-top:12px;width:100%">Importer FitPlus0.dat</button>
+    <details class="howto"><summary>Où trouver ce fichier ?</summary>
+      <p><b>Avec Dolphin :</b> dans la liste des jeux, fais un clic droit sur Wii Fit Plus puis « Ouvrir le dossier de sauvegarde Wii ». Le fichier s'appelle <code>FitPlus0.dat</code>.</p>
+      <p><b>Avec une vraie Wii :</b> Paramètres Wii → Gestion des données → Sauvegardes → Wii, copie Wii Fit Plus sur une carte SD. Sur l'ordinateur, dans Dolphin : Outils → Importer une sauvegarde Wii, et choisis le fichier <code>data.bin</code> de la carte (dossier <code>private/wii/title/RFPP</code>). Dolphin le déchiffre, puis fais comme au-dessus. Attention : ça remplace la sauvegarde Wii Fit Plus de Dolphin, fais une copie avant si tu en as une.</p>
+      <p><b>Sur le téléphone :</b> l'appli garde tes données dans le navigateur du téléphone. Envoie-toi le fichier (Google Drive, mail, Discord…) et importe-le depuis le téléphone.</p>
+    </details>`;
+  $('#wfPick').onclick=()=>$('#wfFile').click()}
+$('#wfFile').onchange=e=>{const f=e.target.files&&e.target.files[0];e.target.value='';if(!f)return;
+  if(f.size>8e6){toast('Fichier trop gros : ce n\'est pas une sauvegarde Wii Fit');return}
+  const rd=new FileReader();rd.onload=()=>{let res=[];try{res=parseWiiFit(rd.result)}catch(err){res=[]}
+    if(!res.length){toast(/data\.bin$/i.test(f.name)?'Ce fichier est chiffré : passe-le d\'abord dans Dolphin (voir « Où trouver ce fichier ? »)':'Aucun profil Wii Fit trouvé dans ce fichier. Il faut FitPlus0.dat.');return}
+    WF=res;if(res.length===1&&res[0].tests.length)importWii(res[0]);else renderWii()};
+  rd.onerror=()=>toast('Impossible de lire ce fichier');rd.readAsArrayBuffer(f)};
+function importWii(p){WF=null;const byDay={};p.tests.forEach(t=>{byDay[dkey(t.t)]=t});
+  const manual=new Set(S.weights.filter(x=>x.src!=='wii'&&!x.demo).map(x=>x.date));
+  if(hasDemo())dropDemo();S.weights=S.weights.filter(x=>x.src!=='wii');let n=0;
+  Object.entries(byDay).forEach(([d,t])=>{if(manual.has(d))return;S.weights.push({id:'wf'+d,date:d,kg:t.kg,src:'wii'});n++});
+  S.wiifit={name:p.name,height:p.height,birth:p.birth,tests:p.tests,at:new Date().toISOString()};save();
+  toast(p.tests.length+' tests Wii Fit importés');renderStats();setTimeout(()=>checkBadges(),400)}
 function render(){renderHeader();if(view==='games')renderGames();if(view==='home')renderHome();if(view==='dojo')renderDojo();if(view==='run')renderRun();if(view==='stats')renderStats()}
 window.addEventListener('resize',()=>{if(view==='dojo')renderDojo()});
 if(!hasDemo())checkBadges(true);
