@@ -250,8 +250,67 @@ def parse_save(data):
                           bmi / 100 if 500 < bmi < 8000 else None, bal / 10 if 0 < bal <= 1000 else None, rec[10:].hex()])
         if name and all(ch.isprintable() for ch in name):
             profiles.append({"name": name or "Mii sans nom", "height": height if 50 <= height <= 230 else None,
-                             "birth": birth, "tests": tests, "head": data[s + 0x24:s + 0x95].hex()})
+                             "birth": birth, "tests": tests, "head": data[s + 0x24:s + 0x95].hex(),
+                             "mii_id": data[s + 0x35:s + 0x39].hex(), "log": parse_log(data, s),
+                             "bests": parse_bests(data, s)})
+    records = parse_records(data, first + 8 * PROFILE_LEN)
+    for p in profiles:
+        p["records"] = my_records(records, p["mii_id"]) if p["mii_id"] != "00000000" else []
     return profiles
+
+
+def parse_log(data, s):
+    """Journal des jours joués : date + 5 compteurs (minutes par catégorie, à confirmer)."""
+    out, o = [], s + 0x26F
+    while o + 12 <= s + 0x3600 and len(out) < 2000:
+        d = struct.unpack(">H", data[o:o + 2])[0]
+        if not d:
+            break
+        y, mo, day = 2000 + (d >> 9), ((d >> 5) & 15) + 1, d & 31
+        if 1 <= mo <= 12 and 1 <= day <= 31:
+            out.append(["%04d-%02d-%02d" % (y, mo, day)] + list(struct.unpack(">5H", data[o + 2:o + 12])))
+        o += 12
+    return out
+
+
+def parse_bests(data, s):
+    """Records personnels : 144 cases de 4 octets (une par jeu)."""
+    out = {}
+    for i in range(144):
+        v = struct.unpack(">I", data[s + 0x3661 + 4 * i:s + 0x3665 + 4 * i])[0]
+        if v:
+            out["A%d" % i] = v
+    return out
+
+
+def parse_records(data, g):
+    """Classements de la console : tableaux de 10 places (Mii, score)."""
+    tables = {}
+    for prefix, base, count in (("A", g + 8, 144), ("B", g + 0x4675C, 40)):
+        for t in range(count):
+            o = base + t * 0x50
+            if o + 0x50 > len(data):
+                break
+            rows = []
+            for k in range(10):
+                mid, sc = data[o + 8 * k:o + 8 * k + 4], struct.unpack(">I", data[o + 8 * k + 4:o + 8 * k + 8])[0]
+                if sc or mid != b"\0\0\0\0":
+                    rows.append((mid.hex(), sc))
+            if rows:
+                tables["%s%d" % (prefix, t)] = rows
+    return tables
+
+
+def my_records(tables, mii):
+    out = []
+    for key, rows in tables.items():
+        ranks = [i for i, r in enumerate(rows) if r[0] == mii]
+        if not ranks:
+            continue
+        best = rows[ranks[0]][1]
+        out.append({"k": key, "v": best & 0x7FFFFFFF, "f": 1 if best & 0x80000000 else 0, "rank": ranks[0] + 1,
+                    "n": len(rows), "top": rows[0][1] & 0x7FFFFFFF, "mine": [r[1] & 0x7FFFFFFF for r in rows if r[0] == mii]})
+    return out
 
 
 def choose_mii(cfg, profiles):

@@ -97,6 +97,15 @@ section.view{display:flex;flex-direction:column;gap:18px;padding-top:4px}
 .hanko svg{width:58%;height:58%}
 .hanko.reveil{background:radial-gradient(circle at 35% 30%,#FFD978,#F2A93B);box-shadow:0 2px 4px rgb(242 169 59/.35)}
 .hanko.soir{background:radial-gradient(circle at 35% 30%,#A6B1EC,#5B6CC4);box-shadow:0 2px 4px rgb(91 108 196/.35)}
+.hanko.wii{background:radial-gradient(circle at 35% 30%,#FFFFFF,#B9C4CD);color:#5E6873;box-shadow:0 2px 4px rgb(40 60 80/.25)}
+.wfrec{display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+.wfrec:first-child{border-top:0}
+.wfrec .medal{width:40px;height:40px;font-family:var(--f-mono);font-size:14px;font-weight:700}
+.wfrec .medal::after{inset:3px;border-width:1.5px}
+.wfrec .nm{font-weight:700;font-size:14px;border:0;background:none;padding:0;text-align:left;cursor:pointer;color:var(--ink)}
+.wfrec .nm small{display:block;font-weight:500;color:var(--ink-2);font-size:12px}
+.wfrec .val{font-family:var(--f-mono);font-size:18px;font-weight:500}
+.wfrec input{font-size:14px;padding:6px 8px}
 .hanko.run{background:radial-gradient(circle at 35% 30%,#B2E06A,var(--matcha));box-shadow:0 2px 4px rgb(124 191 46/.35)}
 .hanko i{position:absolute;right:-3px;top:-3px;font-style:normal;font-family:var(--f-mono);font-size:9px;background:var(--ink);color:#fff;border-radius:8px;padding:0 4px}
 .legend{display:flex;flex-wrap:wrap;gap:6px 12px;margin-top:10px;font-size:12px;color:var(--ink-2)}
@@ -387,7 +396,7 @@ nav.tabs button{font-size:11px!important}
         <div class="cal-head"><h3 id="calTitle">Octobre</h3>
           <div class="cal-nav"><button id="calPrev" aria-label="Mois précédent">‹</button><button id="calNext" aria-label="Mois suivant">›</button></div></div>
         <div class="cal" id="cal"></div>
-        <div class="legend"><span data-ic="run">course</span><span data-ic="yoga">yoga</span><span data-ic="renfo">renfo</span><span data-ic="cardio">cardio</span><span data-ic="etir">étirements</span><span data-ic="reveil">réveil</span><span data-ic="soir">soir</span></div>
+        <div class="legend"><span data-ic="run">course</span><span data-ic="yoga">yoga</span><span data-ic="renfo">renfo</span><span data-ic="cardio">cardio</span><span data-ic="etir">étirements</span><span data-ic="reveil">réveil</span><span data-ic="soir">soir</span><span data-ic="game">Wii Fit</span></div>
       </div>
     </section>
 
@@ -549,7 +558,7 @@ nav.tabs button{font-size:11px!important}
     </div>
     <div class="label">Données</div>
     <p class="empty" style="margin:0">Tout est enregistré dans ce navigateur, sur ce téléphone.</p>
-    <p class="empty" style="margin:0;font-size:12px">Version 2.4 · synchro automatique Wii Fit Plus</p>
+    <p class="empty" style="margin:0;font-size:12px">Version 2.5 · records et jours de jeu Wii Fit Plus</p>
     <div class="row" style="flex-wrap:wrap"><button class="danger" id="resetAll">Tout effacer</button></div>
   </div>
 </div>
@@ -817,6 +826,7 @@ const ICP={run:'<circle cx="14.5" cy="4.5" r="2"/><path d="M7 21l3.5-5.5 3 2V22M
   game:'<rect x="2.5" y="7" width="19" height="11" rx="5.5"/><path d="M7.5 10.5v4M5.5 12.5h4M15.5 11.5h.01M18 13.5h.01"/>',
   trophy:'<path d="M8 4h8v5a4 4 0 0 1-8 0zM8 6H4.5a3.5 3.5 0 0 0 3.8 4.5M16 6h3.5a3.5 3.5 0 0 1-3.8 4.5M12 13v4M9 20.5h6M10 17h4v3.5h-4z"/>',
   edit:'<path d="M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4"/>'};
+ICP.wii=ICP.game;
 const ic=n=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICP[n]}</svg>`;
 document.querySelectorAll('[data-ic]').forEach(e=>e.insertAdjacentHTML('afterbegin',ic(e.dataset.ic)));
 const st=(ex,dur,side)=>({ex,dur,side});
@@ -849,7 +859,7 @@ $$('nav.tabs button').forEach(b=>b.onclick=()=>show(b.dataset.v));
 
 function toast(t){const e=$('#toast');e.textContent=t;e.hidden=false;clearTimeout(toast.h);toast.h=setTimeout(()=>e.hidden=true,2600)}
 
-function activityByDay(){const m={};S.runs.forEach(r=>{(m[dkey(r.date)]=m[dkey(r.date)]||[]).push('run')});S.sessions.forEach(s=>{(m[dkey(s.date)]=m[dkey(s.date)]||[]).push(s.cat)});return m}
+function activityByDay(){const m={};if(S.wiifit&&S.wiifit.log)S.wiifit.log.forEach(l=>{(m[l[0]]=m[l[0]]||[]).push('wii')});S.runs.forEach(r=>{(m[dkey(r.date)]=m[dkey(r.date)]||[]).push('run')});S.sessions.forEach(s=>{(m[dkey(s.date)]=m[dkey(s.date)]||[]).push(s.cat)});return m}
 function streak(){const m=activityByDay();let d=new Date(),n=0;if(!m[dkey(d)])d.setDate(d.getDate()-1);while(m[dkey(d)]){n++;d.setDate(d.getDate()-1)}return n}
 function daysSince(){const all=[...S.runs,...S.sessions].map(x=>+new Date(x.date));if(!all.length)return null;return Math.floor((Date.now()-Math.max(...all))/864e5)}
 
@@ -1469,15 +1479,20 @@ function renderWii(){const box=$('#wiiBody'),w=S.wiifit;
       <button class="link" id="wfCancel" style="margin-top:8px">Annuler</button>`;
     $$('#wiiBody [data-wf]').forEach(b=>b.onclick=()=>importWii(WF[+b.dataset.wf],LV.pendingSync||null));$('#wfCancel').onclick=()=>{WF=null;renderWii()};return}
   if(w){const t=w.tests,last=t[t.length-1],age=w.birth?Math.floor((Date.now()-new Date(w.birth+'T12:00:00'))/(365.25*864e5)):null;
-    const bmiTxt=b=>b==null?'—':fr(b,1)+'<small>'+(b<18.5?'maigreur':b<25?'normal':b<30?'surpoids':'obésité')+'</small>';
+    const cat=b=>b<18.5?'maigreur':b<25?'normal':b<30?'surpoids':'obésité';const days=(w.log||[]).length,recs=(w.records||[]).slice().sort((x,y)=>x.rank-y.rank||String(x.k).localeCompare(y.k,'fr',{numeric:true}));
     box.innerHTML=`<div class="coach" style="grid-template-columns:44px 1fr;gap:12px;align-items:center"><div class="avatar sm" style="background:var(--matcha)">${esc(w.name.charAt(0).toUpperCase())}</div>
-      <div><div class="t" style="font-weight:800;font-size:16px">${esc(w.name)}</div><div class="s" style="font-size:12px;color:var(--ink-2)">${[w.height?fr(w.height/100,2)+' m':'',age?age+' ans':'',t.length+' tests importés'].filter(Boolean).join(' · ')}</div></div></div>
-      <div class="tiles" style="margin-top:12px"><div class="tile"><div class="v">${fr(last.kg,1)}<small>kg</small></div><div class="l">dernier test</div></div>
-      <div class="tile"><div class="v">${last.bmi==null?'—':fr(last.bmi,1)}</div><div class="l">IMC${last.bmi==null?'':' · '+(last.bmi<18.5?'maigreur':last.bmi<25?'normal':last.bmi<30?'surpoids':'obésité')}</div></div>
+      <div><div class="t" style="font-weight:800;font-size:16px">${esc(w.name)}</div><div class="s" style="font-size:12px;color:var(--ink-2)">${[w.height?fr(w.height/100,2)+' m':'',age?age+' ans':'',t.length+' test'+(t.length>1?'s':'')+' de forme',days?days+' jour'+(days>1?'s':'')+' de jeu':''].filter(Boolean).join(' · ')}</div></div></div>
+      ${last?`<div class="tiles" style="margin-top:12px"><div class="tile"><div class="v">${fr(last.kg,1)}<small>kg</small></div><div class="l">dernier test</div></div>
+      <div class="tile"><div class="v">${last.bmi==null?'—':fr(last.bmi,1)}</div><div class="l">IMC${last.bmi==null?'':' · '+cat(last.bmi)}</div></div>
       <div class="tile"><div class="v">${last.bal==null?'—':fr(last.bal,1)}<small>%</small></div><div class="l">équilibre (50 = centré)</div></div></div>
-      <p class="empty" style="margin:10px 0 0;font-size:13px">Dernier test le ${new Date(last.t).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'})}. Tes pesées Wii Fit sont ajoutées à la courbe de poids ci-dessous.</p>
-      <p class="empty" style="margin:6px 0 0;font-size:13px">${S.liveCode?'<span style="color:var(--matcha);font-weight:700">● Synchro automatique avec Dolphin</span>'+(w.sync?' · reçue le '+new Date(w.sync).toLocaleString('fr-FR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):''):'Astuce : avec le programme Elphara sur ton PC, tes nouveaux tests arrivent tout seuls (onglet Jeux → En direct).'}</p>
-      <div class="row" style="margin-top:10px;flex-wrap:wrap"><button class="go ghost" id="wfAgain">Mettre à jour</button><button class="danger" id="wfRemove" style="flex:none">Retirer</button></div>`;
+      <p class="empty" style="margin:10px 0 0;font-size:13px">Dernier test de forme le ${new Date(last.t).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'})}. Tes pesées Wii Fit sont sur la courbe de poids ci-dessous.</p>`:''}
+      ${recs.length?`<div class="label" style="margin:16px 0 4px">Tes records Wii Fit Plus</div><p class="empty" style="margin:0 0 6px;font-size:12px">Touche un nom pour le changer.</p><div id="wfRecs">${recs.map(r=>wfRecRow(r)).join('')}</div>`:''}
+      ${days?`<p class="empty" style="margin:10px 0 0;font-size:13px">Tes jours de jeu Wii Fit apparaissent dans le calendrier de l'accueil.</p>`:''}
+      <p class="empty" style="margin:6px 0 0;font-size:13px">${S.liveCode?'<span style="color:var(--matcha);font-weight:700">● Synchro automatique avec Dolphin</span>'+(w.sync?' · reçue le '+new Date(w.sync).toLocaleString('fr-FR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):''):'Astuce : avec le programme Elphara sur ton PC, tes nouveaux résultats arrivent tout seuls (onglet Jeux → En direct).'}</p>
+      <div class="row" style="margin-top:10px;flex-wrap:wrap"><button class="go ghost" id="wfAgain">Importer un fichier</button><button class="danger" id="wfRemove" style="flex:none">Retirer</button></div>`;
+    $$('#wfRecs [data-rk]').forEach(bt=>bt.onclick=()=>{const k=bt.dataset.rk,row=bt.closest('.wfrec');const nm=wfName(k);
+      bt.outerHTML=`<input class="input" data-rin="${k}" value="${esc(nm.startsWith('Jeu n°')?'':nm)}" placeholder="Nom du jeu" maxlength="40">`;const inp=row.querySelector('input');inp.focus();
+      const done=()=>{S.wfNames=S.wfNames||{};const v=inp.value.trim();if(v)S.wfNames[k]=v;else delete S.wfNames[k];save();renderWii()};inp.onblur=done;inp.onkeydown=e=>{if(e.key==='Enter')inp.blur()}});
     $('#wfAgain').onclick=()=>$('#wfFile').click();
     let armedRm=false;$('#wfRemove').onclick=()=>{const b=$('#wfRemove');if(!armedRm){armedRm=true;b.classList.add('armed');b.textContent='Confirmer';setTimeout(()=>{armedRm=false;b.classList.remove('armed');b.textContent='Retirer'},3500);return}
       S.weights=S.weights.filter(x=>x.src!=='wii');S.wiifit=null;save();toast('Données Wii Fit retirées');renderStats()};return}
@@ -1500,19 +1515,27 @@ function importWii(p,auto){WF=null;const prevN=S.wiifit&&S.wiifit.name===p.name?
   const manual=new Set(S.weights.filter(x=>x.src!=='wii'&&!x.demo).map(x=>x.date));
   if(hasDemo())dropDemo();S.weights=S.weights.filter(x=>x.src!=='wii');let n=0;
   Object.entries(byDay).forEach(([d,t])=>{if(manual.has(d))return;S.weights.push({id:'wf'+d,date:d,kg:t.kg,src:'wii'});n++});
-  S.wiifit={name:p.name,height:p.height,birth:p.birth,tests:p.tests,at:new Date().toISOString(),sync:auto?auto:null};S.wiiMii=p.name;save();
+  S.wiifit={name:p.name,height:p.height,birth:p.birth,tests:p.tests,log:p.log||[],records:p.records||[],at:new Date().toISOString(),sync:auto?auto:null};S.wiiMii=p.name;save();
   if(!auto)toast(p.tests.length+' tests Wii Fit importés');
   else if(prevN==null)toast('Wii Fit Plus connecté : '+p.tests.length+' tests récupérés');
-  else if(p.tests.length>prevN){const l=p.tests[p.tests.length-1];toast('Nouveau test Wii Fit : '+fr(l.kg,1)+' kg');beep(988,.12);setTimeout(()=>beep(1318,.2),130)}
+  else if(p.tests.length>prevN&&p.tests.length){const l=p.tests[p.tests.length-1];toast('Nouveau test Wii Fit : '+fr(l.kg,1)+' kg');beep(988,.12);setTimeout(()=>beep(1318,.2),130)}
   if(view==='stats')renderStats();setTimeout(()=>checkBadges(),400)}
 async function wfPull(){if(!S.liveCode)return;try{
   const r=await fetch(SB_URL+'/rest/v1/rpc/wf_pull',{method:'POST',headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({p_code:S.liveCode})});
   if(!r.ok)return;const j=await r.json();if(!j||!j.data||!Array.isArray(j.data.profiles))return;
   LV.syncAt=j.updated_at;if(S.wiifit&&S.wiifit.sync===j.updated_at){if(view==='games')renderLive();return}
-  const prof=j.data.profiles.map(q=>({name:q.name,height:q.height,birth:q.birth,tests:q.tests.map(a=>({t:new Date(a[0]).toISOString(),kg:a[1],bmi:a[2],bal:a[3]}))}));
-  const mine=prof.find(q=>q.name===S.wiiMii)||(prof.filter(q=>q.tests.length).length===1?prof.find(q=>q.tests.length):null);
-  if(mine)importWii(mine,j.updated_at);else{WF=prof;LV.pendingSync=j.updated_at;toast('Choisis ton Mii dans Suivi → Wii Fit Plus');if(view==='stats')renderWii()}
+  const prof=j.data.profiles.map(q=>({name:q.name,height:q.height,birth:q.birth,log:q.log||[],records:q.records||[],tests:q.tests.map(a=>({t:new Date(a[0]).toISOString(),kg:a[1],bmi:a[2],bal:a[3]}))}));
+  const prevRec=S.wiifit?JSON.stringify(S.wiifit.records||[]):null;
+  const mine=prof.find(q=>q.name===S.wiiMii)||(prof.length===1?prof[0]:null);
+  if(mine){const newRec=wfNewRecords(prevRec,mine.records);importWii(mine,j.updated_at);if(newRec)setTimeout(()=>toast(newRec),2800)}else{WF=prof;LV.pendingSync=j.updated_at;toast('Choisis ton Mii dans Suivi → Wii Fit Plus');if(view==='stats')renderWii()}
   if(view==='games')renderLive()}catch(e){}}
+const WFN={A141:'Course'};
+const wfName=k=>(S.wfNames&&S.wfNames[k])||WFN[k]||('Jeu n°'+k);
+function wfRecRow(r){const t=r.rank===1?'gold':r.rank===2?'silver':r.rank===3?'bronze':'blue';
+  return `<div class="wfrec"><span class="medal t-${t}">${r.rank}</span><button class="nm" data-rk="${esc(r.k)}">${esc(wfName(r.k))}<small>${r.rank===1?(r.n>1?'1er sur '+r.n+' scores de la console':'Seul score de la console'):r.rank+'e · record de la console : '+r.top}</small></button><span class="val">${r.v}</span></div>`}
+function wfNewRecords(prevJson,recs){if(prevJson==null||!recs)return '';let prev=[];try{prev=JSON.parse(prevJson)}catch(e){}
+  const pm={};prev.forEach(r=>pm[r.k]=r.v);const nw=recs.filter(r=>pm[r.k]==null||r.v>pm[r.k]);
+  return nw.length?('Nouveau record Wii Fit : '+wfName(nw[0].k)+' · '+nw[0].v+(nw.length>1?' (+'+(nw.length-1)+')':'')):''}
 /* ---------- en direct depuis Dolphin ---------- */
 const SB_URL='https://zpxkizajcgyshtqzahrq.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpweGtpemFqY2d5c2h0cXphaHJxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE1ODU5ODEsImV4cCI6MjEwNzE2MTk4MX0.g7U6zqRtM4MVujREaRjvCJjxDBxEiJWoahfz9OYFgrs';
