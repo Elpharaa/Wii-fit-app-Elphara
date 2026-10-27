@@ -316,6 +316,12 @@ nav.tabs button{font-size:11px!important}
 .howto b{color:var(--ink)}
 .howto code{font-family:var(--f-mono);font-size:12px;background:var(--surface-2);border-radius:6px;padding:1px 5px;word-break:break-all}
 .go:disabled{opacity:.4}
+.live-act{font-family:var(--f-display);font-weight:900;font-size:22px;margin-top:10px}
+.live-grid{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;margin-top:12px;align-items:start}
+.live-cop{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:12px;color:var(--ink-2);text-align:center}
+.live-cop canvas{width:130px;height:130px}
+.live-vals{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;min-width:0}
+.live-grid:not(:has(.live-cop)){grid-template-columns:1fr}
 .toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:40;
   background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-weight:700;font-size:14px;max-width:90vw;text-align:center}
 </style>
@@ -455,6 +461,7 @@ nav.tabs button{font-size:11px!important}
     <!-- JEUX -->
     <section class="view" id="v-games" hidden>
       <div><div class="label">Mini-jeux</div><h2 style="font-size:24px">Jeux d'équilibre</h2></div>
+      <div class="card" id="liveCard"><div class="row" style="align-items:center;margin-bottom:10px"><div class="label">En direct depuis Dolphin</div><span class="tag" style="flex:none;margin:0;background:#FDE3E1;color:#C0392B">LIVE</span></div><div id="liveBody"></div></div>
       <p class="empty" style="margin:0">Pilote en inclinant ton téléphone. Si l'inclinaison ne marche pas, tu peux jouer au doigt.</p>
       <div class="card game-card"><canvas id="gPrevTable" aria-hidden="true"></canvas><div class="gc-body"><h3>Table inclinée</h3><p>Fais tomber la bille dans le trou bleu et évite les trous gris. Tu as 60 secondes.</p>
         <div class="row" style="align-items:center"><span class="empty" id="gTableBest"></span><button class="go" data-game="table" style="flex:none">Jouer</button></div></div></div>
@@ -509,7 +516,7 @@ nav.tabs button{font-size:11px!important}
     </div>
     <div class="label">Données</div>
     <p class="empty" style="margin:0">Tout est enregistré dans ce navigateur, sur ce téléphone.</p>
-    <p class="empty" style="margin:0;font-size:12px">Version 2.1 · import Wii Fit Plus</p>
+    <p class="empty" style="margin:0;font-size:12px">Version 2.2 · en direct depuis Dolphin</p>
     <div class="row" style="flex-wrap:wrap"><button class="danger" id="resetAll">Tout effacer</button></div>
   </div>
 </div>
@@ -1299,7 +1306,7 @@ const GAMES={table:{name:'Table inclinée',how:'Incline le téléphone pour fair
   slalom:{name:'Slalom',how:'Incline le téléphone à gauche et à droite pour passer entre les drapeaux. Chaque porte ratée ajoute 5 secondes.'}};
 const G={id:null,raf:0,state:'idle'};let GS=null;
 const fmtGT=s=>s.toFixed(1).replace('.',',')+' s';
-function renderGames(){const g=S.games;
+function renderGames(){const g=S.games;renderLive();if(S.liveCode&&LV.status==='off'&&!LV.tried&&/^https?:/.test(location.protocol)){LV.tried=true;liveConnect(S.liveCode)}
   $('#gTableBest').textContent=g.table.plays?'Record : '+g.table.best+' pt'+(g.table.best>1?'s':''):'Pas encore joué';
   $('#gSlalomBest').textContent=g.slalom.best!=null?'Record : '+fmtGT(g.slalom.best):'Pas encore joué';
   requestAnimationFrame(()=>{const a=$('#gPrevTable'),b=$('#gPrevSlalom');if(!a.offsetWidth)return;
@@ -1453,9 +1460,64 @@ function importWii(p){WF=null;const byDay={};p.tests.forEach(t=>{byDay[dkey(t.t)
   Object.entries(byDay).forEach(([d,t])=>{if(manual.has(d))return;S.weights.push({id:'wf'+d,date:d,kg:t.kg,src:'wii'});n++});
   S.wiifit={name:p.name,height:p.height,birth:p.birth,tests:p.tests,at:new Date().toISOString()};save();
   toast(p.tests.length+' tests Wii Fit importés');renderStats();setTimeout(()=>checkBadges(),400)}
+/* ---------- en direct depuis Dolphin ---------- */
+const SB_URL='https://zpxkizajcgyshtqzahrq.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpweGtpemFqY2d5c2h0cXphaHJxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE1ODU5ODEsImV4cCI6MjEwNzE2MTk4MX0.g7U6zqRtM4MVujREaRjvCJjxDBxEiJWoahfz9OYFgrs';
+const LV={code:null,ch:null,client:null,last:0,state:null,status:'off',trail:[],timer:0};
+function loadSupabase(){return new Promise((ok,ko)=>{if(window.supabase&&window.supabase.createClient)return ok();
+  const sc=document.createElement('script');sc.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js';sc.onload=()=>ok();sc.onerror=()=>ko();document.head.appendChild(sc)})}
+async function liveConnect(code){code=(code||'').toUpperCase().replace(/[^A-Z0-9]/g,'');if(code.length!==6){toast('Le code fait 6 caractères');return}
+  liveDisconnect(true);LV.code=code;LV.status='connecting';S.liveCode=code;save();renderLive();
+  try{await loadSupabase()}catch(e){LV.status='error';renderLive();toast('Connexion impossible : vérifie ta connexion internet');return}
+  try{LV.client=LV.client||window.supabase.createClient(SB_URL,SB_KEY);
+    LV.ch=LV.client.channel('elphara-'+code);
+    LV.ch.on('broadcast',{event:'state'},({payload})=>{LV.last=Date.now();LV.state=payload;
+      if(payload&&payload.values&&typeof payload.values.cop_x==='number'){LV.trail.push([payload.values.cop_x,payload.values.cop_y||0]);if(LV.trail.length>40)LV.trail.shift()}
+      renderLive()});
+    LV.ch.subscribe(st=>{if(st==='SUBSCRIBED'){LV.status='on';renderLive()}else if(st==='CHANNEL_ERROR'||st==='TIMED_OUT'){LV.status='error';renderLive()}})}
+  catch(e){LV.status='error';renderLive()}
+  clearInterval(LV.timer);LV.timer=setInterval(()=>{if(view==='games')renderLive(true)},2000)}
+function liveDisconnect(keep){try{if(LV.ch&&LV.client)LV.client.removeChannel(LV.ch)}catch(e){}LV.ch=null;LV.state=null;LV.trail=[];LV.status='off';clearInterval(LV.timer);
+  if(!keep){S.liveCode=null;save();renderLive()}}
+function liveFresh(){return LV.last&&Date.now()-LV.last<7000}
+function renderLive(tickOnly){const box=$('#liveBody');if(!box)return;
+  if(LV.status==='off'){if(tickOnly)return;box.innerHTML=`<p class="empty" style="margin:0;font-size:14px">Lance <b>elphara_live.py</b> sur ton PC à côté de Dolphin, puis tape le code qu'il affiche.</p>
+      <div class="row" style="margin-top:10px;align-items:center"><input class="input" id="liveCode" maxlength="6" autocomplete="off" autocapitalize="characters" placeholder="CODE" style="text-transform:uppercase;letter-spacing:.2em" value="${S.liveCode||''}"><button class="go" id="liveGo" style="flex:none">Se connecter</button></div>
+      <details class="howto"><summary>Comment ça marche ?</summary>
+        <p><b>1.</b> Sur le PC, installe Python, puis dans un terminal : <code>pip install dolphin-memory-engine</code></p>
+        <p><b>2.</b> Télécharge le dossier <code>live</code> depuis ton dépôt GitHub et lance <code>python elphara_live.py --demo</code> pour tester : des fausses valeurs doivent bouger ici.</p>
+        <p><b>3.</b> Lance Dolphin et Wii Fit Plus, puis <code>python elphara_live.py --watch</code>. Les valeurs à lire (équilibre, score…) se règlent dans <code>elphara_live.json</code>.</p>
+      </details>`;
+    $('#liveGo').onclick=()=>liveConnect($('#liveCode').value);$('#liveCode').onkeydown=e=>{if(e.key==='Enter')liveConnect(e.target.value)};return}
+  const st=LV.state,fresh=liveFresh();
+  let pill,txt;if(LV.status==='connecting'){pill='warn';txt='Connexion…'}else if(LV.status==='error'){pill='err';txt='Connexion perdue'}
+  else if(!fresh){pill='warn';txt='En attente du PC'}else if(!st.hooked){pill='warn';txt='Dolphin n\'est pas lancé'}else{pill='ok';txt=st.jeu||st.game||'Jeu lancé'}
+  const v=(st&&fresh&&st.hooked&&st.values)||{},m=(st&&st.meta)||{};
+  const others=Object.keys(v).filter(k=>!['cop_x','cop_y','activite','poids'].includes(k)&&v[k]!=null);
+  const fmt=x=>typeof x==='number'?(Number.isInteger(x)?x:fr(x,1)):esc(x);
+  const hasCop=typeof v.cop_x==='number';
+  box.innerHTML=`<div class="row" style="align-items:center;justify-content:space-between"><span class="gps ${pill}" style="margin:0"><i></i><span>${esc(txt)}</span></span><span class="num" style="flex:none;font-size:12px;color:var(--ink-2)">code ${LV.code}</span></div>
+    ${v.activite!=null?`<div class="live-act">${esc(v.activite)}</div>`:''}
+    <div class="live-grid">${hasCop?`<div class="live-cop"><canvas id="liveCop" aria-label="Centre de gravité"></canvas><span>${esc((m.cop_x&&m.cop_x.libelle)||'Équilibre')}</span></div>`:''}
+      <div class="live-vals">${v.poids!=null?`<div class="tile"><div class="v">${fmt(v.poids)}<small>kg</small></div><div class="l">${esc((m.poids&&m.poids.libelle)||'Poids')}</div></div>`:''}
+      ${others.map(k=>`<div class="tile"><div class="v">${fmt(v[k])}${m[k]&&m[k].unite?'<small>'+esc(m[k].unite)+'</small>':''}</div><div class="l">${esc((m[k]&&m[k].libelle)||k)}</div></div>`).join('')}
+      ${!hasCop&&v.poids==null&&!others.length?`<p class="empty" style="margin:0;font-size:13px">${fresh&&st&&st.hooked?'Aucune valeur réglée pour l\'instant : ajoute des adresses dans elphara_live.json.':'Les valeurs apparaîtront ici dès que le PC enverra des données.'}</p>`:''}</div></div>
+    <div class="row" style="margin-top:10px;flex-wrap:wrap"><button class="go ghost" id="liveCopy">Lien overlay OBS</button><button class="danger" id="liveOff" style="flex:none">Déconnecter</button></div>`;
+  if(hasCop)drawCop($('#liveCop'),v,m);
+  $('#liveOff').onclick=()=>liveDisconnect(false);
+  $('#liveCopy').onclick=()=>{const url=location.origin.includes('github.io')?location.origin+location.pathname.replace(/[^/]*$/,'')+'overlay.html?c='+LV.code:'https://elpharaa.github.io/Wii-fit-app-Elphara/overlay.html?c='+LV.code;
+    (navigator.clipboard?navigator.clipboard.writeText(url):Promise.reject()).then(()=>toast('Lien overlay copié'),()=>toast(url))}}
+function drawCop(cv,v,m){const [w,h]=sizeCanvas(cv),ctx=cv.getContext('2d'),c=colors(),r=Math.min(w,h)/2-6,cx=w/2,cy=h/2;
+  const rg=(k)=>(m[k]&&m[k].plage)||[-1,1],nx=x=>((x-rg('cop_x')[0])/(rg('cop_x')[1]-rg('cop_x')[0]))*2-1,ny=y=>((y-rg('cop_y')[0])/(rg('cop_y')[1]-rg('cop_y')[0]))*2-1;
+  ctx.clearRect(0,0,w,h);ctx.fillStyle='#FFFFFF';ctx.beginPath();ctx.arc(cx,cy,r,0,7);ctx.fill();ctx.strokeStyle=c.l;ctx.lineWidth=2;ctx.stroke();
+  ctx.beginPath();ctx.arc(cx,cy,r*.5,0,7);ctx.stroke();ctx.beginPath();ctx.moveTo(cx-r,cy);ctx.lineTo(cx+r,cy);ctx.moveTo(cx,cy-r);ctx.lineTo(cx,cy+r);ctx.stroke();
+  LV.trail.forEach((p,i)=>{ctx.fillStyle='rgba(31,162,222,'+(i/LV.trail.length*.35)+')';ctx.beginPath();ctx.arc(cx+clamp(nx(p[0]),-1,1)*r,cy+clamp(ny(p[1]),-1,1)*r,r*.05,0,7);ctx.fill()});
+  const x=cx+clamp(nx(v.cop_x),-1,1)*r,y=cy+clamp(ny(typeof v.cop_y==='number'?v.cop_y:0),-1,1)*r;
+  ctx.fillStyle='#E0554A';ctx.beginPath();ctx.arc(x,y,r*.1,0,7);ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=3;ctx.stroke()}
 function render(){renderHeader();if(view==='games')renderGames();if(view==='home')renderHome();if(view==='dojo')renderDojo();if(view==='run')renderRun();if(view==='stats')renderStats()}
 window.addEventListener('resize',()=>{if(view==='dojo')renderDojo()});
 if(!hasDemo())checkBadges(true);
+{const mh=location.hash.match(/^#live(?:-([A-Za-z0-9]{6}))?$/);if(mh){if(mh[1]){S.liveCode=mh[1].toUpperCase();LV.tried=true;liveConnect(S.liveCode)}view='games';show('games')}}
 render();
 })();
 </script>

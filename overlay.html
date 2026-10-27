@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Elphara Fit Live</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=DM+Mono:wght@500&display=swap">
+<style>
+/* Overlay OBS : fond transparent, panneau compact en bas à gauche, style blanc Wii */
+:root{--ink:#3B434C;--ink-2:#87919B;--blue:#1FA2DE;--green:#7CBF2E;--red:#E0554A;--line:#DCE3E9;color-scheme:light}
+html,body{margin:0;background:transparent;font-family:Nunito,"Arial Rounded MT Bold",system-ui,sans-serif;color:var(--ink)}
+.panel{position:fixed;left:24px;bottom:24px;display:flex;align-items:center;gap:16px;background:linear-gradient(#fff,#F3F6F8);border:2px solid #fff;
+  border-radius:28px;padding:14px 22px 14px 14px;box-shadow:0 6px 24px rgb(40 60 80/.25);min-width:320px;transition:opacity .4s}
+.panel.off{opacity:.55}
+canvas{width:110px;height:110px;flex:none}
+.brand{font-size:13px;font-weight:900;color:var(--ink-2);letter-spacing:.06em;text-transform:uppercase;display:flex;align-items:center;gap:8px}
+.brand i{width:10px;height:10px;border-radius:50%;background:var(--red);box-shadow:0 0 0 0 rgb(224 85 74/.6);animation:pulse 1.6s infinite}
+.panel.off .brand i{background:var(--ink-2);animation:none}
+@keyframes pulse{70%{box-shadow:0 0 0 10px rgb(224 85 74/0)}100%{box-shadow:0 0 0 0 rgb(224 85 74/0)}}
+.act{font-size:26px;font-weight:900;line-height:1.1;margin-top:2px}
+.vals{display:flex;gap:18px;margin-top:6px;flex-wrap:wrap}
+.vals div{display:flex;flex-direction:column}
+.vals b{font-family:"DM Mono",ui-monospace,monospace;font-size:24px;font-weight:500;color:var(--blue);font-variant-numeric:tabular-nums}
+.vals span{font-size:12px;color:var(--ink-2);font-weight:700}
+.msg{position:fixed;left:24px;top:24px;background:#fff;border-radius:12px;padding:10px 14px;font-weight:700;box-shadow:0 4px 16px rgb(0 0 0/.15)}
+</style>
+</head>
+<body>
+<div class="panel off" id="panel">
+  <canvas id="cop" hidden></canvas>
+  <div><div class="brand"><i></i><span id="status">Elphara Fit · en attente</span></div><div class="act" id="act">Wii Fit Plus</div><div class="vals" id="vals"></div></div>
+</div>
+<div class="msg" id="msg" hidden></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+(function(){
+const URL_='https://zpxkizajcgyshtqzahrq.supabase.co';
+const KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpweGtpemFqY2d5c2h0cXphaHJxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE1ODU5ODEsImV4cCI6MjEwNzE2MTk4MX0.g7U6zqRtM4MVujREaRjvCJjxDBxEiJWoahfz9OYFgrs';
+const $=s=>document.querySelector(s);
+const code=(new URLSearchParams(location.search).get('c')||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+if(code.length!==6){$('#msg').hidden=false;$('#msg').textContent='Ajoute ?c=TONCODE à la fin de l\'adresse (le code affiché par elphara_live.py).';return}
+let last=0,trail=[];
+const sb=window.supabase.createClient(URL_,KEY);
+sb.channel('elphara-'+code).on('broadcast',{event:'state'},({payload:p})=>{last=Date.now();render(p)}).subscribe();
+setInterval(()=>{if(Date.now()-last>7000){$('#panel').classList.add('off');$('#status').textContent='Elphara Fit · en attente'}},1000);
+function render(p){const v=(p&&p.hooked&&p.values)||{},m=p.meta||{};
+  $('#panel').classList.toggle('off',!p.hooked);$('#status').textContent=p.hooked?'Elphara Fit · live':'Elphara Fit · Dolphin fermé';
+  $('#act').textContent=v.activite||p.jeu||'Wii Fit Plus';
+  const keys=Object.keys(v).filter(k=>!['cop_x','cop_y','activite'].includes(k)&&v[k]!=null).slice(0,4);
+  $('#vals').innerHTML=keys.map(k=>{const x=v[k],t=typeof x==='number'?(Number.isInteger(x)?x:x.toFixed(1).replace('.',',')):esc(x);
+    return `<div><b>${t}${m[k]&&m[k].unite?' '+esc(m[k].unite):''}</b><span>${esc((m[k]&&m[k].libelle)||k)}</span></div>`}).join('');
+  const cv=$('#cop');cv.hidden=typeof v.cop_x!=='number';if(!cv.hidden){trail.push([v.cop_x,v.cop_y||0]);if(trail.length>30)trail.shift();draw(cv,v,m)}}
+function draw(cv,v,m){const d=2,w=cv.width=110*d,h=cv.height=110*d,ctx=cv.getContext('2d'),r=w/2-6,cx=w/2,cy=h/2;
+  const rg=k=>(m[k]&&m[k].plage)||[-1,1],n=(x,k)=>Math.max(-1,Math.min(1,((x-rg(k)[0])/(rg(k)[1]-rg(k)[0]))*2-1));
+  ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(cx,cy,r,0,7);ctx.fill();ctx.strokeStyle='#DCE3E9';ctx.lineWidth=4;ctx.stroke();
+  ctx.beginPath();ctx.arc(cx,cy,r*.5,0,7);ctx.moveTo(cx-r,cy);ctx.lineTo(cx+r,cy);ctx.moveTo(cx,cy-r);ctx.lineTo(cx,cy+r);ctx.stroke();
+  trail.forEach((p,i)=>{ctx.fillStyle='rgba(31,162,222,'+(i/trail.length*.4)+')';ctx.beginPath();ctx.arc(cx+n(p[0],'cop_x')*r,cy+n(p[1],'cop_y')*r,r*.06,0,7);ctx.fill()});
+  ctx.fillStyle='#E0554A';ctx.beginPath();ctx.arc(cx+n(v.cop_x,'cop_x')*r,cy+n(typeof v.cop_y==='number'?v.cop_y:0,'cop_y')*r,r*.12,0,7);ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=5;ctx.stroke()}
+})();
+</script>
+</body>
+</html>
