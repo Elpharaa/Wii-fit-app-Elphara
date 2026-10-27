@@ -549,7 +549,7 @@ nav.tabs button{font-size:11px!important}
     </div>
     <div class="label">Données</div>
     <p class="empty" style="margin:0">Tout est enregistré dans ce navigateur, sur ce téléphone.</p>
-    <p class="empty" style="margin:0;font-size:12px">Version 2.3 · version PC</p>
+    <p class="empty" style="margin:0;font-size:12px">Version 2.4 · synchro automatique Wii Fit Plus</p>
     <div class="row" style="flex-wrap:wrap"><button class="danger" id="resetAll">Tout effacer</button></div>
   </div>
 </div>
@@ -1341,7 +1341,7 @@ const GAMES={table:{name:'Table inclinée',how:'Incline le téléphone pour fair
   slalom:{name:'Slalom',how:'Incline le téléphone à gauche et à droite pour passer entre les drapeaux. Chaque porte ratée ajoute 5 secondes.'}};
 const G={id:null,raf:0,state:'idle'};let GS=null;
 const fmtGT=s=>s.toFixed(1).replace('.',',')+' s';
-function renderGames(){const g=S.games;renderLive();if(S.liveCode&&LV.status==='off'&&!LV.tried&&/^https?:/.test(location.protocol)){LV.tried=true;liveConnect(S.liveCode)}
+function renderGames(){const g=S.games;renderLive();if(S.liveCode&&S.liveCode.length===8&&LV.status==='off'&&!LV.tried&&/^https?:/.test(location.protocol)){LV.tried=true;liveConnect(S.liveCode)}
   $('#gTableBest').textContent=g.table.plays?'Record : '+g.table.best+' pt'+(g.table.best>1?'s':''):'Pas encore joué';
   $('#gSlalomBest').textContent=g.slalom.best!=null?'Record : '+fmtGT(g.slalom.best):'Pas encore joué';
   requestAnimationFrame(()=>{const a=$('#gPrevTable'),b=$('#gPrevSlalom');if(!a.offsetWidth)return;
@@ -1466,7 +1466,7 @@ function renderWii(){const box=$('#wiiBody'),w=S.wiifit;
   if(WF){box.innerHTML=`<div class="label" style="margin-bottom:8px">${WF.length>1?'Choisis ton Mii':'Profil trouvé'}</div><div class="list">${WF.map((p,i)=>{const t=p.tests,last=t[t.length-1];
       return `<div class="li" style="grid-template-columns:44px minmax(0,1fr) auto"><div class="k">${ic('star')}</div><div style="min-width:0"><div class="t">${esc(p.name)}</div><div class="s">${t.length} test${t.length>1?'s':''}${t.length?' · '+fdate(t[0].t)+' '+new Date(t[0].t).getFullYear()+' → '+fdate(last.t)+' '+new Date(last.t).getFullYear():''}</div></div><button class="go" data-wf="${i}" style="padding:10px 16px" ${t.length?'':'disabled'}>Importer</button></div>`}).join('')}</div>
       <button class="link" id="wfCancel" style="margin-top:8px">Annuler</button>`;
-    $$('#wiiBody [data-wf]').forEach(b=>b.onclick=()=>importWii(WF[+b.dataset.wf]));$('#wfCancel').onclick=()=>{WF=null;renderWii()};return}
+    $$('#wiiBody [data-wf]').forEach(b=>b.onclick=()=>importWii(WF[+b.dataset.wf],LV.pendingSync||null));$('#wfCancel').onclick=()=>{WF=null;renderWii()};return}
   if(w){const t=w.tests,last=t[t.length-1],age=w.birth?Math.floor((Date.now()-new Date(w.birth+'T12:00:00'))/(365.25*864e5)):null;
     const bmiTxt=b=>b==null?'—':fr(b,1)+'<small>'+(b<18.5?'maigreur':b<25?'normal':b<30?'surpoids':'obésité')+'</small>';
     box.innerHTML=`<div class="coach" style="grid-template-columns:44px 1fr;gap:12px;align-items:center"><div class="avatar sm" style="background:var(--matcha)">${esc(w.name.charAt(0).toUpperCase())}</div>
@@ -1475,11 +1475,13 @@ function renderWii(){const box=$('#wiiBody'),w=S.wiifit;
       <div class="tile"><div class="v">${last.bmi==null?'—':fr(last.bmi,1)}</div><div class="l">IMC${last.bmi==null?'':' · '+(last.bmi<18.5?'maigreur':last.bmi<25?'normal':last.bmi<30?'surpoids':'obésité')}</div></div>
       <div class="tile"><div class="v">${last.bal==null?'—':fr(last.bal,1)}<small>%</small></div><div class="l">équilibre (50 = centré)</div></div></div>
       <p class="empty" style="margin:10px 0 0;font-size:13px">Dernier test le ${new Date(last.t).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'})}. Tes pesées Wii Fit sont ajoutées à la courbe de poids ci-dessous.</p>
+      <p class="empty" style="margin:6px 0 0;font-size:13px">${S.liveCode?'<span style="color:var(--matcha);font-weight:700">● Synchro automatique avec Dolphin</span>'+(w.sync?' · reçue le '+new Date(w.sync).toLocaleString('fr-FR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):''):'Astuce : avec le programme Elphara sur ton PC, tes nouveaux tests arrivent tout seuls (onglet Jeux → En direct).'}</p>
       <div class="row" style="margin-top:10px;flex-wrap:wrap"><button class="go ghost" id="wfAgain">Mettre à jour</button><button class="danger" id="wfRemove" style="flex:none">Retirer</button></div>`;
     $('#wfAgain').onclick=()=>$('#wfFile').click();
     let armedRm=false;$('#wfRemove').onclick=()=>{const b=$('#wfRemove');if(!armedRm){armedRm=true;b.classList.add('armed');b.textContent='Confirmer';setTimeout(()=>{armedRm=false;b.classList.remove('armed');b.textContent='Retirer'},3500);return}
       S.weights=S.weights.filter(x=>x.src!=='wii');S.wiifit=null;save();toast('Données Wii Fit retirées');renderStats()};return}
   box.innerHTML=`<p class="empty" style="margin:0;font-size:14px">Récupère l'historique de tes tests de forme Wii Fit Plus : poids, IMC et équilibre, avec ton profil Mii.</p>
+    <p style="margin:10px 0 0;font-size:14px"><b>Le plus simple :</b> lance le programme Elphara sur ton PC et entre son code dans Jeux → En direct. Tes résultats arriveront tout seuls.</p>
     <button class="go" id="wfPick" style="margin-top:12px;width:100%">Importer FitPlus0.dat</button>
     <details class="howto"><summary>Où trouver ce fichier ?</summary>
       <p><b>Avec Dolphin :</b> dans la liste des jeux, fais un clic droit sur Wii Fit Plus puis « Ouvrir le dossier de sauvegarde Wii ». Le fichier s'appelle <code>FitPlus0.dat</code>.</p>
@@ -1493,24 +1495,36 @@ $('#wfFile').onchange=e=>{const f=e.target.files&&e.target.files[0];e.target.val
     if(!res.length){toast(/data\.bin$/i.test(f.name)?'Ce fichier est chiffré : passe-le d\'abord dans Dolphin (voir « Où trouver ce fichier ? »)':'Aucun profil Wii Fit trouvé dans ce fichier. Il faut FitPlus0.dat.');return}
     WF=res;if(res.length===1&&res[0].tests.length)importWii(res[0]);else renderWii()};
   rd.onerror=()=>toast('Impossible de lire ce fichier');rd.readAsArrayBuffer(f)};
-function importWii(p){WF=null;const byDay={};p.tests.forEach(t=>{byDay[dkey(t.t)]=t});
+function importWii(p,auto){WF=null;const prevN=S.wiifit&&S.wiifit.name===p.name?S.wiifit.tests.length:null;const byDay={};p.tests.forEach(t=>{byDay[dkey(t.t)]=t});
   const manual=new Set(S.weights.filter(x=>x.src!=='wii'&&!x.demo).map(x=>x.date));
   if(hasDemo())dropDemo();S.weights=S.weights.filter(x=>x.src!=='wii');let n=0;
   Object.entries(byDay).forEach(([d,t])=>{if(manual.has(d))return;S.weights.push({id:'wf'+d,date:d,kg:t.kg,src:'wii'});n++});
-  S.wiifit={name:p.name,height:p.height,birth:p.birth,tests:p.tests,at:new Date().toISOString()};save();
-  toast(p.tests.length+' tests Wii Fit importés');renderStats();setTimeout(()=>checkBadges(),400)}
+  S.wiifit={name:p.name,height:p.height,birth:p.birth,tests:p.tests,at:new Date().toISOString(),sync:auto?auto:null};S.wiiMii=p.name;save();
+  if(!auto)toast(p.tests.length+' tests Wii Fit importés');
+  else if(prevN==null)toast('Wii Fit Plus connecté : '+p.tests.length+' tests récupérés');
+  else if(p.tests.length>prevN){const l=p.tests[p.tests.length-1];toast('Nouveau test Wii Fit : '+fr(l.kg,1)+' kg');beep(988,.12);setTimeout(()=>beep(1318,.2),130)}
+  if(view==='stats')renderStats();setTimeout(()=>checkBadges(),400)}
+async function wfPull(){if(!S.liveCode)return;try{
+  const r=await fetch(SB_URL+'/rest/v1/rpc/wf_pull',{method:'POST',headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({p_code:S.liveCode})});
+  if(!r.ok)return;const j=await r.json();if(!j||!j.data||!Array.isArray(j.data.profiles))return;
+  LV.syncAt=j.updated_at;if(S.wiifit&&S.wiifit.sync===j.updated_at){if(view==='games')renderLive();return}
+  const prof=j.data.profiles.map(q=>({name:q.name,height:q.height,birth:q.birth,tests:q.tests.map(a=>({t:new Date(a[0]).toISOString(),kg:a[1],bmi:a[2],bal:a[3]}))}));
+  const mine=prof.find(q=>q.name===S.wiiMii)||(prof.filter(q=>q.tests.length).length===1?prof.find(q=>q.tests.length):null);
+  if(mine)importWii(mine,j.updated_at);else{WF=prof;LV.pendingSync=j.updated_at;toast('Choisis ton Mii dans Suivi → Wii Fit Plus');if(view==='stats')renderWii()}
+  if(view==='games')renderLive()}catch(e){}}
 /* ---------- en direct depuis Dolphin ---------- */
 const SB_URL='https://zpxkizajcgyshtqzahrq.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpweGtpemFqY2d5c2h0cXphaHJxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE1ODU5ODEsImV4cCI6MjEwNzE2MTk4MX0.g7U6zqRtM4MVujREaRjvCJjxDBxEiJWoahfz9OYFgrs';
 const LV={code:null,ch:null,client:null,last:0,state:null,status:'off',trail:[],timer:0};
 function loadSupabase(){return new Promise((ok,ko)=>{if(window.supabase&&window.supabase.createClient)return ok();
   const sc=document.createElement('script');sc.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js';sc.onload=()=>ok();sc.onerror=()=>ko();document.head.appendChild(sc)})}
-async function liveConnect(code){code=(code||'').toUpperCase().replace(/[^A-Z0-9]/g,'');if(code.length!==6){toast('Le code fait 6 caractères');return}
-  liveDisconnect(true);LV.code=code;LV.status='connecting';S.liveCode=code;save();renderLive();
+async function liveConnect(code){code=(code||'').toUpperCase().replace(/[^A-Z0-9]/g,'');if(code.length!==8){toast('Le code fait 8 caractères');return}
+  liveDisconnect(true);LV.code=code;LV.status='connecting';S.liveCode=code;save();renderLive();wfPull();
   try{await loadSupabase()}catch(e){LV.status='error';renderLive();toast('Connexion impossible : vérifie ta connexion internet');return}
   try{LV.client=LV.client||window.supabase.createClient(SB_URL,SB_KEY);
     LV.ch=LV.client.channel('elphara-'+code);
-    LV.ch.on('broadcast',{event:'state'},({payload})=>{LV.last=Date.now();LV.state=payload;
+    LV.ch.on('broadcast',{event:'sync'},()=>{LV.last=Date.now();wfPull()});
+    LV.ch.on('broadcast',{event:'state'},({payload})=>{LV.last=Date.now();LV.state=payload;if(payload&&payload.sync&&payload.sync!==LV.seenSync){LV.seenSync=payload.sync;wfPull()}
       if(payload&&payload.values&&typeof payload.values.cop_x==='number'){LV.trail.push([payload.values.cop_x,payload.values.cop_y||0]);if(LV.trail.length>40)LV.trail.shift()}
       renderLive()});
     LV.ch.subscribe(st=>{if(st==='SUBSCRIBED'){LV.status='on';renderLive()}else if(st==='CHANNEL_ERROR'||st==='TIMED_OUT'){LV.status='error';renderLive()}})}
@@ -1521,26 +1535,27 @@ function liveDisconnect(keep){try{if(LV.ch&&LV.client)LV.client.removeChannel(LV
 function liveFresh(){return LV.last&&Date.now()-LV.last<7000}
 function renderLive(tickOnly){const box=$('#liveBody');if(!box)return;
   if(LV.status==='off'){if(tickOnly)return;box.innerHTML=`<p class="empty" style="margin:0;font-size:14px">Lance <b>elphara_live.py</b> sur ton PC à côté de Dolphin, puis tape le code qu'il affiche.</p>
-      <div class="row" style="margin-top:10px;align-items:center"><input class="input" id="liveCode" maxlength="6" autocomplete="off" autocapitalize="characters" placeholder="CODE" style="text-transform:uppercase;letter-spacing:.2em" value="${S.liveCode||''}"><button class="go" id="liveGo" style="flex:none">Se connecter</button></div>
+      <div class="row" style="margin-top:10px;align-items:center"><input class="input" id="liveCode" maxlength="8" autocomplete="off" autocapitalize="characters" placeholder="CODE" style="text-transform:uppercase;letter-spacing:.2em" value="${S.liveCode||''}"><button class="go" id="liveGo" style="flex:none">Se connecter</button></div>
       <details class="howto"><summary>Comment ça marche ?</summary>
-        <p><b>1.</b> Sur le PC, installe Python, puis dans un terminal : <code>pip install dolphin-memory-engine</code></p>
-        <p><b>2.</b> Télécharge le dossier <code>live</code> depuis ton dépôt GitHub et lance <code>python elphara_live.py --demo</code> pour tester : des fausses valeurs doivent bouger ici.</p>
-        <p><b>3.</b> Lance Dolphin et Wii Fit Plus, puis <code>python elphara_live.py --watch</code>. Les valeurs à lire (équilibre, score…) se règlent dans <code>elphara_live.json</code>.</p>
+        <p><b>1.</b> Installe Python sur ton PC (python.org, coche « Add Python to PATH »).</p>
+        <p><b>2.</b> Mets <code>elphara_live.py</code> et <code>Lancer Elphara.bat</code> dans un même dossier, puis double-clique sur le .bat.</p>
+        <p><b>3.</b> Tape ici le code à 8 caractères qu'il affiche. C'est tout : chaque fois que Wii Fit Plus enregistre un test dans Dolphin, il arrive dans Suivi.</p>
       </details>`;
     $('#liveGo').onclick=()=>liveConnect($('#liveCode').value);$('#liveCode').onkeydown=e=>{if(e.key==='Enter')liveConnect(e.target.value)};return}
   const st=LV.state,fresh=liveFresh();
   let pill,txt;if(LV.status==='connecting'){pill='warn';txt='Connexion…'}else if(LV.status==='error'){pill='err';txt='Connexion perdue'}
-  else if(!fresh){pill='warn';txt='En attente du PC'}else if(!st.hooked){pill='warn';txt='Dolphin n\'est pas lancé'}else{pill='ok';txt=st.jeu||st.game||'Jeu lancé'}
+  else if(!fresh){pill='warn';txt='En attente du PC'}else if(st.hooked===null||st.hooked===undefined){pill='ok';txt='PC connecté'}else if(!st.hooked){pill='warn';txt='Dolphin n\'est pas lancé'}else{pill='ok';txt=st.jeu||st.game||'Jeu lancé'}
   const v=(st&&fresh&&st.hooked&&st.values)||{},m=(st&&st.meta)||{};
   const others=Object.keys(v).filter(k=>!['cop_x','cop_y','activite','poids'].includes(k)&&v[k]!=null);
   const fmt=x=>typeof x==='number'?(Number.isInteger(x)?x:fr(x,1)):esc(x);
   const hasCop=typeof v.cop_x==='number';
   box.innerHTML=`<div class="row" style="align-items:center;justify-content:space-between"><span class="gps ${pill}" style="margin:0"><i></i><span>${esc(txt)}</span></span><span class="num" style="flex:none;font-size:12px;color:var(--ink-2)">code ${LV.code}</span></div>
+    <p class="empty" style="margin:8px 0 0;font-size:13px">${S.wiifit&&S.wiifit.sync?'Sauvegarde Wii Fit synchronisée : '+S.wiifit.tests.length+' tests de '+esc(S.wiifit.name)+' · '+new Date(S.wiifit.sync).toLocaleString('fr-FR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'Sauvegarde Wii Fit : en attente du programme sur le PC.'}</p>
     ${v.activite!=null?`<div class="live-act">${esc(v.activite)}</div>`:''}
     <div class="live-grid">${hasCop?`<div class="live-cop"><canvas id="liveCop" aria-label="Centre de gravité"></canvas><span>${esc((m.cop_x&&m.cop_x.libelle)||'Équilibre')}</span></div>`:''}
       <div class="live-vals">${v.poids!=null?`<div class="tile"><div class="v">${fmt(v.poids)}<small>kg</small></div><div class="l">${esc((m.poids&&m.poids.libelle)||'Poids')}</div></div>`:''}
       ${others.map(k=>`<div class="tile"><div class="v">${fmt(v[k])}${m[k]&&m[k].unite?'<small>'+esc(m[k].unite)+'</small>':''}</div><div class="l">${esc((m[k]&&m[k].libelle)||k)}</div></div>`).join('')}
-      ${!hasCop&&v.poids==null&&!others.length?`<p class="empty" style="margin:0;font-size:13px">${fresh&&st&&st.hooked?'Aucune valeur réglée pour l\'instant : ajoute des adresses dans elphara_live.json.':'Les valeurs apparaîtront ici dès que le PC enverra des données.'}</p>`:''}</div></div>
+      ${!hasCop&&v.poids==null&&!others.length?`<p class="empty" style="margin:0;font-size:13px">Le direct pendant les parties (score, équilibre) viendra quand on aura trouvé les bonnes adresses mémoire.</p>`:''}</div></div>
     <div class="row" style="margin-top:10px;flex-wrap:wrap"><button class="go ghost" id="liveCopy">Lien overlay OBS</button><button class="danger" id="liveOff" style="flex:none">Déconnecter</button></div>`;
   if(hasCop)drawCop($('#liveCop'),v,m);
   $('#liveOff').onclick=()=>liveDisconnect(false);
@@ -1556,7 +1571,7 @@ function drawCop(cv,v,m){const [w,h]=sizeCanvas(cv),ctx=cv.getContext('2d'),c=co
 function render(){renderHeader();if(view==='games')renderGames();if(view==='home')renderHome();if(view==='dojo')renderDojo();if(view==='run')renderRun();if(view==='stats')renderStats()}
 window.addEventListener('resize',()=>{if(view==='run'&&isDesk()&&R.state==='idle'){show('home');return}if(view==='dojo')renderDojo()});
 if(!hasDemo())checkBadges(true);
-{const mh=location.hash.match(/^#live(?:-([A-Za-z0-9]{6}))?$/);if(mh){if(mh[1]){S.liveCode=mh[1].toUpperCase();LV.tried=true;liveConnect(S.liveCode)}view='games';show('games')}}
+{const mh=location.hash.match(/^#live(?:-([A-Za-z0-9]{8}))?$/);if(mh){if(mh[1]){S.liveCode=mh[1].toUpperCase();LV.tried=true;liveConnect(S.liveCode)}view='games';show('games')}else if(S.liveCode&&S.liveCode.length===8&&/^https?:/.test(location.protocol)){LV.tried=true;liveConnect(S.liveCode)}}
 render();
 })();
 </script>

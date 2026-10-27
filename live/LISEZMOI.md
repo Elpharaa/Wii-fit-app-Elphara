@@ -1,32 +1,26 @@
-# Elphara Fit Live
+# Elphara Fit – connexion Dolphin
 
-Lit Wii Fit Plus dans Dolphin et envoie les valeurs en direct à l'appli Elphara Fit (onglet Jeux → En direct) et à l'overlay OBS.
+Ce programme relie Wii Fit Plus (sur Dolphin) à l'appli Elphara Fit.
 
 ## Installation (une seule fois)
 
 1. Installe Python 3 depuis python.org (coche « Add Python to PATH »).
-2. Dans un terminal : `pip install dolphin-memory-engine`
-3. Télécharge ce dossier `live` (elphara_live.py).
+2. Mets `elphara_live.py` et `Lancer Elphara.bat` dans un même dossier (par ex. `Documents\ElpharaLive`).
 
-## Tester sans Dolphin
+## Utilisation
 
-```
-python elphara_live.py --demo
-```
+1. Double-clique sur **Lancer Elphara.bat**. Laisse la fenêtre ouverte.
+2. La première fois, ouvre le lien affiché (ou tape le code à 8 caractères dans l'appli : Jeux → En direct).
+3. Joue à Wii Fit Plus sur Dolphin. Chaque fois que le jeu enregistre (après un test de forme), tes résultats arrivent dans l'appli (Suivi → Wii Fit Plus).
 
-Le programme affiche ton code à 6 caractères. Tape-le dans l'appli : des fausses valeurs doivent bouger.
+Le programme trouve tout seul la sauvegarde de Dolphin. Si elle est ailleurs, indique le dossier utilisateur de Dolphin dans `elphara_live.json` (`"dossier_dolphin"`), ou lance `python elphara_live.py --save CHEMIN\FitPlus0.dat`.
 
-## Avec Dolphin
+Ne partage pas `elphara_live.json` : il contient la clé qui permet d'envoyer tes données.
 
-1. Lance Dolphin puis Wii Fit Plus.
-2. `python elphara_live.py --watch`
-3. Règle les adresses mémoire dans `elphara_live.json` (créé au premier lancement).
+## Direct pendant les parties (optionnel, avancé)
 
-Chaque valeur : `nom`, `libelle`, `adresse` (ex. `"0x80ABCDEF"`), `type` (`u8`, `u16`, `u32`, `s8`, `s16`, `s32`, `float`), `actif`.
-Options : `unite`, `plage` ([min, max] pour cop_x / cop_y), `facteur` (multiplie la valeur), `pointeur` (liste de décalages si l'adresse bouge), `noms` (traduit un numéro en texte, ex. `{"3": "Slalom"}`).
-
-Noms spéciaux reconnus par l'appli : `cop_x` et `cop_y` (centre de gravité, affiché en cible), `poids`, `activite` (titre affiché en grand).
+`pip install dolphin-memory-engine`, puis règle des adresses mémoire dans `elphara_live.json` (`valeurs`, avec `"actif": true`). Noms reconnus par l'appli : `cop_x`, `cop_y` (centre de gravité), `poids`, `score`, `activite`.
 
 ## Overlay OBS
 
-Source « Navigateur » dans OBS, adresse : `https://elpharaa.github.io/Wii-fit-app-Elphara/overlay.html?c=TONCODE`, largeur 600, hauteur 250.
+Source « Navigateur » : `https://elpharaa.github.io/Wii-fit-app-Elphara/overlay.html?c=TONCODE` (600 × 250).

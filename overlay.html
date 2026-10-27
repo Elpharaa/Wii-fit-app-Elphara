@@ -39,7 +39,7 @@ const KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6
 const $=s=>document.querySelector(s);
 const code=(new URLSearchParams(location.search).get('c')||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
 const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-if(code.length!==6){$('#msg').hidden=false;$('#msg').textContent='Ajoute ?c=TONCODE à la fin de l\'adresse (le code affiché par elphara_live.py).';return}
+if(code.length<6){$('#msg').hidden=false;$('#msg').textContent='Ajoute ?c=TONCODE à la fin de l\'adresse (le code affiché par elphara_live.py).';return}
 let last=0,trail=[];
 const sb=window.supabase.createClient(URL_,KEY);
 sb.channel('elphara-'+code).on('broadcast',{event:'state'},({payload:p})=>{last=Date.now();render(p)}).subscribe();
