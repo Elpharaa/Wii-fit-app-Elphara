@@ -322,6 +322,38 @@ nav.tabs button{font-size:11px!important}
 .live-cop canvas{width:130px;height:130px}
 .live-vals{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;min-width:0}
 .live-grid:not(:has(.live-cop)){grid-template-columns:1fr}
+#qLive{display:none}
+.only-desk{display:none}
+/* version PC : barre latérale, contenu sur plusieurs colonnes, pas de course */
+@media (min-width: 960px){
+  body{padding-left:232px}
+  .app{max-width:1120px;padding-block:0 48px}
+  nav.tabs{top:0;bottom:0;right:auto;width:232px;border-top:0;border-right:1px solid var(--line);padding:84px 14px 16px;background:linear-gradient(#fff,#F7F9FB)}
+  nav.tabs .in{grid-template-columns:1fr!important;gap:4px;max-width:none}
+  nav.tabs button{flex-direction:row!important;justify-content:flex-start;gap:12px;padding:12px 14px!important;border-radius:14px;font-size:15px!important}
+  nav.tabs button[aria-current="page"]{background:var(--sakura-soft)}
+  nav.tabs button[data-v="run"]{display:none}
+  nav.tabs::before{content:"Elphara Fit";position:absolute;left:28px;top:26px;font-family:var(--f-display);font-weight:900;font-size:24px;color:var(--ink-2)}
+  header.top .brand{visibility:hidden}
+  #qRun{display:none}
+  #qLive{display:flex}
+  .only-desk{display:block}
+  .only-phone{display:none}
+  section.view{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;align-items:start}
+  section.view[hidden]{display:none!important}
+  section.view>*{min-width:0}
+  #v-home>.demo-note,#v-games>div:first-child,#v-games>p,#v-games>#liveCard,#v-stats>div:first-child,#v-stats>#totTiles,#v-stats>.card:has(#badgeGrid),#v-dojo>*{grid-column:1/-1}
+  #v-home>.quick{grid-template-columns:1fr 1fr}
+  #sessList{display:grid!important;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));align-items:start}
+  #totTiles{grid-template-columns:repeat(4,1fr)}
+  .badges{grid-template-columns:repeat(auto-fill,minmax(96px,1fr))}
+  .live-cop canvas{width:180px;height:180px}
+  .live-act{font-size:28px}
+  .sheet-bg{align-items:center}
+  .sheet{border-radius:24px;max-height:86%}
+  .screen .wrap{max-width:820px}
+  body .toast{bottom:28px}
+}
 .toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:40;
   background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-weight:700;font-size:14px;max-width:90vw;text-align:center}
 </style>
@@ -344,6 +376,7 @@ nav.tabs button{font-size:11px!important}
       </div>
       <div class="quick">
         <button class="qbtn a" id="qYoga"><span class="k" data-ic="yoga"></span><strong id="qYogaT">Yoga du matin</strong><small id="qYogaS">Éveil du matin · 6 min</small></button>
+        <button class="qbtn a" id="qLive" style="background:var(--ink)"><span class="k" data-ic="game"></span><strong>En direct</strong><small>Wii Fit Plus sur Dolphin</small></button>
         <button class="qbtn b" id="qRun"><span class="k" data-ic="run"></span><strong>Aller courir</strong><small>Chrono et GPS</small></button>
       </div>
       <div>
@@ -462,7 +495,7 @@ nav.tabs button{font-size:11px!important}
     <section class="view" id="v-games" hidden>
       <div><div class="label">Mini-jeux</div><h2 style="font-size:24px">Jeux d'équilibre</h2></div>
       <div class="card" id="liveCard"><div class="row" style="align-items:center;margin-bottom:10px"><div class="label">En direct depuis Dolphin</div><span class="tag" style="flex:none;margin:0;background:#FDE3E1;color:#C0392B">LIVE</span></div><div id="liveBody"></div></div>
-      <p class="empty" style="margin:0">Pilote en inclinant ton téléphone. Si l'inclinaison ne marche pas, tu peux jouer au doigt.</p>
+      <p class="empty" style="margin:0"><span class="only-phone">Pilote en inclinant ton téléphone. Si l'inclinaison ne marche pas, tu peux jouer au doigt.</span><span class="only-desk">Sur PC, pilote avec les flèches du clavier ou à la souris. Sur téléphone, en l'inclinant.</span></p>
       <div class="card game-card"><canvas id="gPrevTable" aria-hidden="true"></canvas><div class="gc-body"><h3>Table inclinée</h3><p>Fais tomber la bille dans le trou bleu et évite les trous gris. Tu as 60 secondes.</p>
         <div class="row" style="align-items:center"><span class="empty" id="gTableBest"></span><button class="go" data-game="table" style="flex:none">Jouer</button></div></div></div>
       <div class="card game-card"><canvas id="gPrevSlalom" aria-hidden="true"></canvas><div class="gc-body"><h3>Slalom</h3><p>Descends la piste en passant entre les drapeaux. Chaque porte ratée ajoute 5 secondes.</p>
@@ -516,7 +549,7 @@ nav.tabs button{font-size:11px!important}
     </div>
     <div class="label">Données</div>
     <p class="empty" style="margin:0">Tout est enregistré dans ce navigateur, sur ce téléphone.</p>
-    <p class="empty" style="margin:0;font-size:12px">Version 2.2 · en direct depuis Dolphin</p>
+    <p class="empty" style="margin:0;font-size:12px">Version 2.3 · version PC</p>
     <div class="row" style="flex-wrap:wrap"><button class="danger" id="resetAll">Tout effacer</button></div>
   </div>
 </div>
@@ -810,7 +843,7 @@ SESS.forEach(s=>{if(s.steps[s.steps.length-1].ex==='rest')s.steps.pop();s.total=
 
 /* ---------- views ---------- */
 let view='home';
-function show(v){view=v;$$('section.view').forEach(s=>s.hidden=s.id!=='v-'+v);$$('nav.tabs button').forEach(b=>{if(b.dataset.v===v)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});
+function show(v){if(v==='run'&&isDesk()&&R.state==='idle')v='home';view=v;$$('section.view').forEach(s=>s.hidden=s.id!=='v-'+v);$$('nav.tabs button').forEach(b=>{if(b.dataset.v===v)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});
   window.scrollTo(0,0);render();}
 $$('nav.tabs button').forEach(b=>b.onclick=()=>show(b.dataset.v));
 
@@ -854,6 +887,8 @@ $('#clearDemo').onclick=()=>{dropDemo();save();phrase='';render();toast('Exemple
 function quickSess(){const h=new Date().getHours();if(h>=5&&h<11)return {s:SESS.find(x=>x.id==='reveilDoux'),t:'Réveil en douceur'};if(h>=20||h<5)return {s:SESS.find(x=>x.id==='dormir'),t:'Avant de dormir'};return {s:SESS.find(x=>x.id==='eveil'),t:'Yoga'}}
 $('#qYoga').onclick=()=>openPlayer(quickSess().s);
 $('#qRun').onclick=()=>show('run');
+$('#qLive').onclick=()=>{show('games');setTimeout(()=>{const c=$('#liveCard');if(c)c.scrollIntoView({behavior:'smooth',block:'start'})},50)};
+const isDesk=()=>matchMedia('(min-width: 960px)').matches;
 
 /* dojo */
 let cat='yoga';
@@ -1320,13 +1355,17 @@ function openGame(id){G.id=id;G.state='ready';cancelAnimationFrame(G.raf);$('#ga
 function closeGame(){G.state='idle';cancelAnimationFrame(G.raf);$('#game').hidden=true;document.body.style.overflow='';keepAwake(false);render()}
 $('#gClose').onclick=closeGame;$('#gQuit').onclick=closeGame;
 async function launch(){const ok=await enableTilt();TILT.base=null;TILT.x=0;TILT.y=0;TILT.touch=!ok;TILT.last=0;
-  $('#gReady').hidden=true;$('#gEnd').hidden=true;$('#gHint').hidden=!TILT.touch;keepAwake(true);startGame();
+  $('#gHint').textContent=isDesk()?'Sur PC : utilise les flèches du clavier, ou clique-glisse avec la souris.':'Inclinaison non détectée : glisse ton doigt sur l\'écran pour piloter.';$('#gReady').hidden=true;$('#gEnd').hidden=true;$('#gHint').hidden=!TILT.touch&&!isDesk();keepAwake(true);startGame();
   setTimeout(()=>{if(G.state!=='idle'&&!TILT.last&&!TILT.touch){TILT.touch=true;$('#gHint').hidden=false}},1800)}
 $('#gStart').onclick=launch;$('#gAgain').onclick=launch;
 (function(){const cv=$('#gCanvas');let on=false;
   const upd=e=>{if(!TILT.touch||!on)return;const r=cv.getBoundingClientRect();TILT.x=clamp((e.clientX-r.left-r.width/2)/(r.width*.3),-1,1);TILT.y=clamp((e.clientY-r.top-r.height/2)/(r.height*.3),-1,1)};
   cv.addEventListener('pointerdown',e=>{on=true;try{cv.setPointerCapture(e.pointerId)}catch(_){}upd(e)});cv.addEventListener('pointermove',upd);
   const end=()=>{on=false;if(TILT.touch){TILT.x=0;TILT.y=0}};cv.addEventListener('pointerup',end);cv.addEventListener('pointercancel',end)})();
+const KEYD={};
+function keyTilt(){TILT.x=(KEYD.ArrowRight?1:0)-(KEYD.ArrowLeft?1:0);TILT.y=(KEYD.ArrowDown?1:0)-(KEYD.ArrowUp?1:0)}
+window.addEventListener('keydown',e=>{if($('#game').hidden||!/^Arrow/.test(e.key))return;e.preventDefault();TILT.touch=true;KEYD[e.key]=true;keyTilt()});
+window.addEventListener('keyup',e=>{if(!/^Arrow/.test(e.key))return;KEYD[e.key]=false;if(!$('#game').hidden)keyTilt()});
 function startGame(){cancelAnimationFrame(G.raf);const cv=$('#gCanvas'),[w,h]=sizeCanvas(cv);GS=G.id==='table'?tableInit(w,h):slalomInit(w,h);
   G.state='count';G.t0=performance.now();G.last=G.t0;G.cd=3;beep(760,.1);G.raf=requestAnimationFrame(gameLoop)}
 function gameLoop(now){G.raf=requestAnimationFrame(gameLoop);const cv=$('#gCanvas'),ctx=cv.getContext('2d'),w=cv.width,h=cv.height;const dt=Math.min(.05,(now-G.last)/1000);G.last=now;
@@ -1515,7 +1554,7 @@ function drawCop(cv,v,m){const [w,h]=sizeCanvas(cv),ctx=cv.getContext('2d'),c=co
   const x=cx+clamp(nx(v.cop_x),-1,1)*r,y=cy+clamp(ny(typeof v.cop_y==='number'?v.cop_y:0),-1,1)*r;
   ctx.fillStyle='#E0554A';ctx.beginPath();ctx.arc(x,y,r*.1,0,7);ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=3;ctx.stroke()}
 function render(){renderHeader();if(view==='games')renderGames();if(view==='home')renderHome();if(view==='dojo')renderDojo();if(view==='run')renderRun();if(view==='stats')renderStats()}
-window.addEventListener('resize',()=>{if(view==='dojo')renderDojo()});
+window.addEventListener('resize',()=>{if(view==='run'&&isDesk()&&R.state==='idle'){show('home');return}if(view==='dojo')renderDojo()});
 if(!hasDemo())checkBadges(true);
 {const mh=location.hash.match(/^#live(?:-([A-Za-z0-9]{6}))?$/);if(mh){if(mh[1]){S.liveCode=mh[1].toUpperCase();LV.tried=true;liveConnect(S.liveCode)}view='games';show('games')}}
 render();
