@@ -75,6 +75,7 @@ def load_cfg():
         changed = True
     cfg.setdefault("frequence_hz", 4)
     cfg.setdefault("dossier_dolphin", "")
+    cfg.setdefault("sauvegarde", "")
     cfg.setdefault("valeurs", default_values())
     if changed or not os.path.exists(CFG_PATH):
         with open(CFG_PATH, "w", encoding="utf-8") as f:
@@ -110,6 +111,8 @@ def dolphin_roots(cfg):
     for env, sub in (("APPDATA", "Dolphin Emulator"), ("USERPROFILE", os.path.join("Documents", "Dolphin Emulator"))):
         if os.environ.get(env):
             roots.append(os.path.join(os.environ[env], sub))
+    for d in dolphin_exe_dirs():
+        roots += [os.path.join(d, "User"), d]
     roots += [os.path.join(home, "Documents", "Dolphin Emulator"),
               os.path.join(home, ".local", "share", "dolphin-emu"),
               os.path.join(home, ".dolphin-emu"),
@@ -132,7 +135,59 @@ def nand_dirs(root):
     return dirs
 
 
-def find_save(cfg):
+SAVE_NAMES = ("FitPlus0.dat", "RPHealth.dat")
+
+
+def save_in(path):
+    """Accepte un fichier de sauvegarde ou un dossier qui en contient un."""
+    path = os.path.expandvars(os.path.expanduser(str(path).strip().strip('"')))
+    if os.path.isfile(path) and os.path.basename(path) in SAVE_NAMES:
+        return path
+    if os.path.isdir(path):
+        for n in SAVE_NAMES:
+            for cand in (os.path.join(path, n), os.path.join(path, "data", n)):
+                if os.path.isfile(cand):
+                    return cand
+    return None
+
+
+def dolphin_exe_dirs():
+    """Dossiers où tourne Dolphin (pour la version portable)."""
+    dirs = []
+    if os.name == "nt":
+        try:
+            import subprocess
+            out = subprocess.run(["powershell", "-NoProfile", "-Command",
+                                  "Get-Process | Where-Object {$_.ProcessName -like 'Dolphin*'} | ForEach-Object {$_.Path}"],
+                                 capture_output=True, text=True, timeout=10).stdout
+            dirs = [os.path.dirname(l.strip()) for l in out.splitlines() if l.strip()]
+        except Exception:
+            pass
+    return dirs
+
+
+def deep_search(max_seconds=20):
+    """Cherche FitPlus0.dat dans le dossier utilisateur et à côté de Dolphin."""
+    roots = dolphin_exe_dirs() + [os.path.expanduser("~")]
+    skip = {"node_modules", ".git", "temp", "tmp", "cache", "caches", "windows", "$recycle.bin", "packages", "microsoft"}
+    t0, found = time.time(), []
+    for root in roots:
+        for cur, dirs, files in os.walk(root):
+            if time.time() - t0 > max_seconds:
+                return found
+            depth = cur[len(root):].count(os.sep)
+            dirs[:] = [d for d in dirs if d.lower() not in skip and depth < 9]
+            for n in SAVE_NAMES:
+                if n in files and os.path.basename(os.path.dirname(cur)).lower().startswith("5246"):
+                    found.append(os.path.join(cur, n))
+    return found
+
+
+def find_save(cfg, deep=False):
+    if cfg.get("sauvegarde"):
+        p = save_in(cfg["sauvegarde"])
+        if p:
+            return p
     found = []
     for root in dolphin_roots(cfg):
         for nand in nand_dirs(root):
@@ -140,6 +195,8 @@ def find_save(cfg):
                 p = os.path.join(nand, "title", "00010000", tid, "data", fname)
                 if os.path.isfile(p):
                     found.append(p)
+    if not found and deep:
+        found = deep_search()
     # sauvegarde la plus récente en premier
     found = sorted(set(found), key=lambda p: os.path.getmtime(p), reverse=True)
     return found[0] if found else None
@@ -267,7 +324,31 @@ def main():
         import dolphin_memory_engine as dme
     except ImportError:
         dme = None
-    save = forced if forced and os.path.isfile(forced) else find_save(cfg)
+    save = save_in(forced) if forced else find_save(cfg)
+    if not save:
+        print("Recherche de la sauvegarde Wii Fit Plus dans tes dossiers (jusqu'à 20 secondes)…")
+        save = find_save(cfg, deep=True)
+    if not save and sys.stdin and sys.stdin.isatty():
+        print()
+        print("Je n'ai pas trouvé la sauvegarde Wii Fit Plus.")
+        print("Dans Dolphin : clic droit sur Wii Fit Plus > « Ouvrir le dossier de sauvegarde Wii ».")
+        print("Glisse le fichier FitPlus0.dat (ou le dossier) dans cette fenêtre, puis appuie sur Entrée.")
+        print("(Entrée sans rien pour continuer sans la sauvegarde)")
+        try:
+            typed = input("> ").strip()
+        except EOFError:
+            typed = ""
+        if typed:
+            save = save_in(typed)
+            if save:
+                cfg["sauvegarde"] = save
+                with open(CFG_PATH, "w", encoding="utf-8") as f:
+                    json.dump(cfg, f, ensure_ascii=False, indent=2)
+                print("Merci ! Je retiens cet emplacement.")
+            else:
+                print("Ce n'est pas une sauvegarde Wii Fit (il faut FitPlus0.dat). On continue sans.")
+    if save:
+        cfg["sauvegarde"] = save
     banner(cfg, demo, save, dme is not None)
 
     values = [v for v in cfg.get("valeurs", []) if v.get("actif", False)]
