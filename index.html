@@ -1448,7 +1448,8 @@ function slalomDraw(ctx,K,w,h,still){ctx.fillStyle='#FBFDFF';ctx.fillRect(0,0,w,
 /* ---------- import Wii Fit Plus ---------- */
 /*WFPARSE_START*/
 function parseWiiFit(buf){const u=new Uint8Array(buf),dv=new DataView(buf),starts=[];
-  for(let i=0;i+8<=u.length;i++){if(u[i]===0x52&&u[i+1]===0x50&&u[i+2]===0x48&&u[i+3]===0x45&&u[i+4]===0x30&&u[i+5]===0x30&&u[i+6]===0x30&&u[i+7]===0x30){starts.push(i);i+=0x3000}}
+  let first=-1;for(let i=0;i+8<=u.length;i++){if(u[i]===0x52&&u[i+1]===0x50&&u[i+2]===0x48&&u[i+3]===0x45&&u[i+4]===0x30&&u[i+5]===0x30&&u[i+6]===0x30&&u[i+7]===0x30){first=i;break}}
+  if(first<0)return [];for(let k=0;k<8;k++){const st=first+k*0x9281;if(st+0x38A1<u.length)starts.push(st)}
   const bcd=b=>(b>>4)*10+(b&15),out=[];
   starts.forEach((s,k)=>{const end=k+1<starts.length?starts[k+1]:u.length;if(s+0x38A1>end)return;
     let name='';for(let j=0;j<11;j++){const c=dv.getUint16(s+8+j*2,false);if(!c)break;name+=String.fromCharCode(c)}name=name.trim();
@@ -1456,9 +1457,9 @@ function parseWiiFit(buf){const u=new Uint8Array(buf),dv=new DataView(buf),start
     const birth=by>1900&&by<2030&&bm>=1&&bm<=12&&bd>=1&&bd<=31?by+'-'+pad(bm)+'-'+pad(bd):null;
     const tests=[];for(let o=s+0x38A1;o+21<=end&&tests.length<6000;o+=21){const p=dv.getUint32(o,false),y=p>>>20&0x7ff;if(!y)break;
       const mo=(p>>>16&0xf)+1,d=p>>>11&0x1f,h=p>>>6&0x1f,mi=p&0x3f,kg=dv.getUint16(o+4,false)/10,bmi=dv.getUint16(o+6,false)/100,bal=dv.getUint16(o+8,false)/10;
-      if(y<2007||y>2040||mo>12||d<1||d>31||h>23||mi>59||kg<10||kg>250)continue;
+      if(y<2007||y>2040||mo>12||d<1||d>31||h>23||mi>59||kg<10||kg>250)break;
       tests.push({t:new Date(y,mo-1,d,h,mi).toISOString(),kg,bmi:bmi>5&&bmi<80?bmi:null,bal:bal>0&&bal<=100?bal:null})}
-    if(name||tests.length)out.push({name:name||'Mii sans nom',height:height>=50&&height<=230?height:null,birth,tests})});
+    if(name&&!/[\u0000-\u001f\uffff]/.test(name))out.push({name,height:height>=50&&height<=230?height:null,birth,tests})});
   return out}
 /*WFPARSE_END*/
 let WF=null;

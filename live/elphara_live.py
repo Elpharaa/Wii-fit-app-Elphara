@@ -76,6 +76,7 @@ def load_cfg():
     cfg.setdefault("frequence_hz", 4)
     cfg.setdefault("dossier_dolphin", "")
     cfg.setdefault("sauvegarde", "")
+    cfg.setdefault("mii", "")
     cfg.setdefault("valeurs", default_values())
     if changed or not os.path.exists(CFG_PATH):
         with open(CFG_PATH, "w", encoding="utf-8") as f:
@@ -192,9 +193,10 @@ def find_save(cfg, deep=False):
     for root in dolphin_roots(cfg):
         for nand in nand_dirs(root):
             for tid, fname in SAVE_IDS:
-                p = os.path.join(nand, "title", "00010000", tid, "data", fname)
-                if os.path.isfile(p):
-                    found.append(p)
+                for cat in ("00010004", "00010000"):
+                    p = os.path.join(nand, "title", cat, tid, "data", fname)
+                    if os.path.isfile(p):
+                        found.append(p)
     if not found and deep:
         found = deep_search()
     # sauvegarde la plus récente en premier
@@ -206,11 +208,15 @@ def bcd(b):
     return (b >> 4) * 10 + (b & 15)
 
 
+PROFILE_LEN = 0x9281  # taille d'un profil Mii dans la sauvegarde
+
+
 def parse_save(data):
-    starts, i = [], data.find(b"RPHE0000")
-    while i != -1:
-        starts.append(i)
-        i = data.find(b"RPHE0000", i + 0x3000)
+    first = data.find(b"RPHE0000")
+    if first == -1:
+        return []
+    # seul le premier profil a un en-tête : les suivants se suivent tous les 0x9281 octets
+    starts = [first + k * PROFILE_LEN for k in range(8) if first + k * PROFILE_LEN + 0x38A1 < len(data)]
     profiles = []
     for k, s in enumerate(starts):
         end = starts[k + 1] if k + 1 < len(starts) else len(data)
@@ -239,13 +245,42 @@ def parse_save(data):
                 break
             mo, d, h, mi = (p >> 16 & 0xF) + 1, p >> 11 & 0x1F, p >> 6 & 0x1F, p & 0x3F
             if not (2007 <= y <= 2040 and mo <= 12 and 1 <= d <= 31 and h <= 23 and mi <= 59 and 100 <= kg <= 2500):
-                continue
+                break
             tests.append(["%04d-%02d-%02dT%02d:%02d" % (y, mo, d, h, mi), kg / 10,
                           bmi / 100 if 500 < bmi < 8000 else None, bal / 10 if 0 < bal <= 1000 else None, rec[10:].hex()])
-        if name or tests:
+        if name and all(ch.isprintable() for ch in name):
             profiles.append({"name": name or "Mii sans nom", "height": height if 50 <= height <= 230 else None,
                              "birth": birth, "tests": tests, "head": data[s + 0x24:s + 0x95].hex()})
     return profiles
+
+
+def choose_mii(cfg, profiles):
+    """Demande une seule fois quel Mii est le tien. Seul celui-là est envoyé en ligne."""
+    names = [p["name"] for p in profiles]
+    if cfg.get("mii") in names:
+        return cfg["mii"]
+    if len(profiles) == 1:
+        pick = names[0]
+    elif sys.stdin and sys.stdin.isatty():
+        print()
+        print("Profils trouvés dans Wii Fit Plus :")
+        for i, p in enumerate(profiles, 1):
+            print("  %d. %s (%d test%s)" % (i, p["name"], len(p["tests"]), "s" if len(p["tests"]) > 1 else ""))
+        pick = None
+        while pick is None:
+            try:
+                n = int(input("Quel est ton Mii ? Tape son numéro puis Entrée : ").strip())
+                if 1 <= n <= len(profiles):
+                    pick = names[n - 1]
+            except (ValueError, EOFError):
+                pass
+    else:
+        pick = max(profiles, key=lambda p: len(p["tests"]))["name"]
+    cfg["mii"] = pick
+    with open(CFG_PATH, "w", encoding="utf-8") as f:
+        json.dump(cfg, f, ensure_ascii=False, indent=2)
+    print("OK, ton Mii est", pick, "(modifiable dans elphara_live.json, ligne \"mii\").")
+    return pick
 
 
 def sync_save(cfg, path):
@@ -255,6 +290,8 @@ def sync_save(cfg, path):
     if not profiles:
         print("La sauvegarde a été trouvée mais aucun profil n'a pu être lu :", path)
         return False
+    mine = choose_mii(cfg, profiles)
+    profiles = [p for p in profiles if p["name"] == mine]
     tid = os.path.basename(os.path.dirname(os.path.dirname(path)))
     payload = {"v": 1, "game": bytes.fromhex(tid).decode("ascii", "replace"),
                "saved": datetime.datetime.fromtimestamp(os.path.getmtime(path)).isoformat(timespec="seconds"),
